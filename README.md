@@ -17,9 +17,12 @@
    3.  **DD**:<br> "define double-world"的缩写，也就是往文件里直接写入4个字节的指令
    4.  RESB:<br> 预留空间
 3. 寄存器
-   1. ![avatar](".\data\8位寄存器.png")<center>8位寄存器</center>
-   2. ![avatar](".\data\16位寄存器.png")<center>16位寄存器</center>
-   3. ![avatar](".\data\data/段寄存器.png")<center>段位寄存器</center>
+   1. <br><center>8位寄存器</center>
+   ![avatar](.\img\8位寄存器.png)
+   1. <br><center>16位寄存器</center>
+   ![avatar](.\img\16位寄存器.png)
+   1. <br><center>段位寄存器</center>
+   ![avatar](.\img\段寄存器.png)
 ## Day02
 1. 使用汇编输出了hello zzq, I am your OS. (*^_^*)
 ## Day03
@@ -27,4 +30,6 @@
 2.  系统在启动时会自动读取第一个扇区，这个扇区中记录了磁盘和操作系统相关的信息，并由此引导系统进入操作系统，也因此这段程序本身位于软盘正面的第一个扇区(512字节), 即C0-H0-S1
 3.  1张软盘有80个柱面，2个磁头，18个扇区，且一个扇区有512字节。所以，一张软盘的容量是：80×2×18×512 = 1 474 560 Byte = 1 440KB
 4.  这段程序读取了正反两面磁盘的2-18扇区(反面是0-18)的0-9柱面(总共 2 * 10 * 18 * 512 = 184320 字节)
-5.  <br>![avatar]("./data/data/内存分布.png")<center>内存分布图</center>
+5.  <center>内存分布图</center> 
+   ![avatar](.\img\内存分布.png)
+
