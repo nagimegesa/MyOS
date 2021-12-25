@@ -18,11 +18,11 @@
    4.  RESB:<br> 预留空间
 3. 寄存器
    1. <br><center>8位寄存器</center>
-   ![avatar](.\img\8位寄存器.png)
+   ![avatar](./img/8位寄存器.png)
    1. <br><center>16位寄存器</center>
-   ![avatar](.\img\16位寄存器.png)
+   ![avatar](./img/16位寄存器.png)
    1. <br><center>段位寄存器</center>
-   ![avatar](.\img\段寄存器.png)
+   ![avatar](./img/段寄存器.png)
 ## Day02
 1. 使用汇编输出了hello zzq, I am your OS. (*^_^*)
 ## Day03
@@ -31,5 +31,5 @@
 3.  1张软盘有80个柱面，2个磁头，18个扇区，且一个扇区有512字节。所以，一张软盘的容量是：80×2×18×512 = 1 474 560 Byte = 1 440KB
 4.  这段程序读取了正反两面磁盘的2-18扇区(反面是0-18)的0-9柱面(总共 2 * 10 * 18 * 512 = 184320 字节)
 5.  <center>内存分布图</center> 
-   ![avatar](.\img\内存分布.png)
+   ![avatar](./img/内存分布.png)
 
