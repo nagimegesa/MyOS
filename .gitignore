@@ -1,4 +1,14 @@
+/.vscode
+/.vscode/*
 run.bat
 /虚拟机
 /tools/压缩包
 *.list
+*.hrb
+*.obj
+*.gas
+*.map
+*.nas
+*.bin
+*.sys
+*.log

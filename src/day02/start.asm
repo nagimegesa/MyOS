@@ -56,6 +56,6 @@ msg:
     DB      0x0a
     DB      0
 
-    RESB    0x7def-$
+    RESB    0x7dfe-$
 
     DB      0x55,0xaa
