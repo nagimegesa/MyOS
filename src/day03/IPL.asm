@@ -38,7 +38,7 @@ entry:
 
 ; 读取磁盘 2 - 18 扇区(512 * (18 - 2 + 1)字节)
 
-    MOV     AX, 0x8200               ; 读取的内容放到 0x8200
+    MOV     AX, 0x0820               ; 读取的内容放到 0x08200
     MOV     ES, AX                   ; ES 才是真正存放的位置
     MOV     CH, 0                    ; 柱面0
     MOV     DH, 0                    ; 磁头0
@@ -103,6 +103,6 @@ msg:
     DB      "Load address error"
     DB      0x0a
     DB      0
-    RESB    0x7def-$                ; 填写 0 到0x001fe
+    RESB    0x7dfe-$                ; 填写 0 到0x001fe
 
     DB      0x55, 0xaa              ; 启动扇区的结束标志 
