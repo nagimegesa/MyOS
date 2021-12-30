@@ -44,3 +44,18 @@ MyOS.sys: bootpack.hrb MyOS.bin
 
 install:
 	$(MAKE) MyOS.img
+
+clean:
+	del *.gas
+	del *.obj
+	del *.sys
+	del *.bin
+	del *.list
+	del *.nas
+	del *.bim
+	del *.hrb
+	del *.map
+
+cleanAll:
+	$(MAKE) clean
+	del *.img
