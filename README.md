@@ -22,16 +22,16 @@
 
 1. 使用汇编编写了磁盘的格式
 2. 汇编命令
-   * **DB**:`<br>` “define byte”的缩写，也就是往文件里直接写入1个字节的指令
-   * **DW**:`<br>` "define world"的缩写，也就是往文件里直接写入2个字节的指令
-   * **DD**:`<br>` "define double-world"的缩写，也就是往文件里直接写入4个字节的指令
-   * RESB:`<br>` 预留空间
+   * **DB**:<br> “define byte”的缩写，也就是往文件里直接写入1个字节的指令
+   * **DW**:<br> "define world"的缩写，也就是往文件里直接写入2个字节的指令
+   * **DD**:<br> "define double-world"的缩写，也就是往文件里直接写入4个字节的指令
+   * RESB:<br> 预留空间
 3. 寄存器
-   1. `<br><center>`8位寄存器 `</center>`
+   1. <br><center>8位寄存器</center>
       ![avatar](./img/8位寄存器.png)
-   2. `<br><center>`16位寄存器 `</center>`
+   2. <br><center>16位寄存器</center>
       ![avatar](./img/16位寄存器.png)
-   3. `<br><center>`段位寄存器 `</center>`
+   3. <br><center>段位寄存器</center>
       ![avatar](./img/段寄存器.png)
 
 ## Day02
