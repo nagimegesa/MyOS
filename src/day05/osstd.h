@@ -1,6 +1,5 @@
-
-#ifndef __OSSTD__H
-#define __OSSTD__H
+#ifndef __OSSTD_H__
+#define __OSSTD_H__
 
 #include "BaseFunction.h"
 
@@ -11,8 +10,28 @@ void setPalette(int start, int end, unsigned char *rgb);
 void initPalette(void);
 
 // 绘制矩形
-void drawRect(unsigned char *addr, int xSize, int x, int y, unsigned wide,
-              unsigned high, unsigned char COLOR);
+void drawRect(unsigned char *addr, const int xSize, const unsigned x,
+              const unsigned int y, const unsigned wide, const unsigned high,
+              const unsigned char COLOR);
+
+// 储存屏幕信息的结构体
+struct Screen {
+    unsigned high, wide;
+    char *startAddr; // 在显卡中的起始位置
+};
+
+// 绘制屏幕
+void drawScreen(struct Screen info);
+
+// 初始化屏幕信息
+void initScreen(struct Screen *info);
+
+// 在x, y位置放置一个字符 ch
+void putChar(const char ch, const struct Screen info, const int x, const int y,
+             const char color);
+
+void putString(const char *str, const struct Screen info, int x, int y,
+               const char color);
 
 // BIOS 颜色
 #define COLOR_BLACK 0             // 黑

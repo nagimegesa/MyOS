@@ -1,5 +1,7 @@
 #include "osstd.h"
 
+#include "MyFont.h"
+
 // 初始化调色板
 void initPalette(void) {
     static unsigned char table_rgb[16 * 3] = {
@@ -39,8 +41,9 @@ void setPalette(int start, int end, unsigned char *rgb) {
     return;
 }
 
-void drawRect(unsigned char *addr, int xSize, int x, int y, unsigned wide,
-              unsigned high, unsigned char COLOR) {
+void drawRect(unsigned char *addr, const int xSize, const unsigned x,
+              const unsigned y, const unsigned wide, const unsigned high,
+              const unsigned char COLOR) {
     const int x1 = x + wide, y1 = y + high;
     for (int i = y; i <= y1; ++i) {
         for (int j = x; j <= x1; ++j) {
@@ -48,4 +51,44 @@ void drawRect(unsigned char *addr, int xSize, int x, int y, unsigned wide,
         }
     }
     return;
+}
+
+void initScreen(struct Screen *screen) {
+    screen->wide = *(short *)0x0ff4;
+    screen->high = *(short *)0x0ff6;
+    screen->startAddr = (char *)(*(int *)0x0ff8);
+}
+
+void drawScreen(struct Screen screen) {
+    drawRect(screen.startAddr, screen.wide, 0, 0, screen.wide, screen.high,
+             COLOR_LIGHT_DARK_BLUE);
+}
+
+// 在x, y位置放置一个字符 ch
+void putChar(const char ch, const struct Screen screen, const int x,
+             const int y, const char color) {
+    char *addr = (char *)screen.startAddr;
+    const char *model = __FontModel + 16 * ch;
+    const unsigned xsize = screen.wide;
+    for (int i = 0; i < 16; i++) {
+        const char d = model[i];
+        char *p = addr + (y + i) * xsize + x;
+        if ((d & 0x80) != 0) p[0] = color;
+        if ((d & 0x40) != 0) p[1] = color;
+        if ((d & 0x20) != 0) p[2] = color;
+        if ((d & 0x10) != 0) p[3] = color;
+        if ((d & 0x08) != 0) p[4] = color;
+        if ((d & 0x04) != 0) p[5] = color;
+        if ((d & 0x02) != 0) p[6] = color;
+        if ((d & 0x01) != 0) p[7] = color;
+    }
+    return;
+}
+
+void putString(const char *str, const struct Screen screen, int x, int y,
+               const char color) {
+    for (; *str != '\0'; ++str) {
+        putChar(*str, screen, x, y, color);
+        x += 8;
+    }
 }
