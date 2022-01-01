@@ -27,26 +27,35 @@ MyOS.img: MyOS.sys IPL.sys
 		copy from:MyOS.sys to:@: \
 		imgout:MyOS.img
 
-bootpack.gas: bootpack.c
-	$(CC1)	bootpack.c -o bootpack.gas 
+# bootpack.gas: bootpack.c
+# 	$(CC1)	bootpack.c -o bootpack.gas 
 
-osstd.gas: osstd.c
-	$(CC1)	osstd.c -o osstd.gas 
+# osstd.gas: osstd.c
+# 	$(CC1)	osstd.c -o osstd.gas 
 
-bootpack.nas: bootpack.gas
-	$(GAS2NASK) bootpack.gas bootpack.nas
+# bootpack.nas: bootpack.gas
+# 	$(GAS2NASK) bootpack.gas bootpack.nas
 	
-osstd.nas: osstd.gas
-	$(GAS2NASK) osstd.gas osstd.nas
+# osstd.nas: osstd.gas
+# 	$(GAS2NASK) osstd.gas osstd.nas
 
-osstd.obj: osstd.nas
-	$(NASK) osstd.nas osstd.obj
+# osstd.obj: osstd.nas
+# 	$(NASK) osstd.nas osstd.obj
 
-bootpack.obj: bootpack.nas
-	$(NASK) bootpack.nas bootpack.obj
+# bootpack.obj: bootpack.nas
+# 	$(NASK) bootpack.nas bootpack.obj
 
 BaseFunction.obj: BaseFunction.asm
 	$(NASK) BaseFunction.asm BaseFunction.obj
+
+%.gas: %.c
+	$(CC1) $*.c -o $*.gas
+
+%.nas: %.gas
+	$(GAS2NASK) $*.gas $*.nas
+
+%.obj: %.nas 
+	$(NASK) $*.nas $*.obj
 
 # hankaku.bin : hankaku.txt Makefile
 # 	$(MAKEFONT) hankaku.txt hankaku.bin
@@ -54,7 +63,7 @@ BaseFunction.obj: BaseFunction.asm
 # hankaku.obj : hankaku.bin Makefile
 # 	$(BIN2OBJ) hankaku.bin hankaku.obj _hankaku
 
-bootpack.bim: bootpack.obj BaseFunction.obj osstd.obj hankaku.obj
+bootpack.bim: bootpack.obj BaseFunction.obj osstd.obj
 	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
 		bootpack.obj BaseFunction.obj osstd.obj
 

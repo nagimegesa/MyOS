@@ -17,21 +17,33 @@ void drawRect(unsigned char *addr, const int xSize, const unsigned x,
 // 储存屏幕信息的结构体
 struct Screen {
     unsigned high, wide;
-    char *startAddr; // 在显卡中的起始位置
+    char *startAddr;  // 在显卡中的起始位置
+};
+
+struct Mouse {
+    int x, y;
+    struct Screen* screen;
+    char model[16][16];
 };
 
 // 绘制屏幕
-void drawScreen(struct Screen info);
+void drawScreen(struct Screen screen);
 
 // 初始化屏幕信息
-void initScreen(struct Screen *info);
+void initScreen(struct Screen *screen);
 
 // 在x, y位置放置一个字符 ch
-void putChar(const char ch, const struct Screen info, const int x, const int y,
-             const char color);
+void putChar(const char ch, const struct Screen screen, const int x,
+             const int y, const char color);
 
-void putString(const char *str, const struct Screen info, int x, int y,
+void putString(const char *str, const struct Screen screen, int x, int y,
                const char color);
+
+// 初始化鼠标
+void initMouse(struct Mouse *mouse, struct Screen *screen);
+
+// 绘制鼠标
+void drawMouse(const struct Mouse mouse);
 
 // BIOS 颜色
 #define COLOR_BLACK 0             // 黑
