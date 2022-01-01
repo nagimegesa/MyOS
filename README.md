@@ -14,12 +14,12 @@
    * MyOSHead -- 自己的操作系统需要的头文件(由作者提供，里面记录了主函数入口的等相关信息)
    * <a href = "./tools/nask.exe">nask.exe</a> -- 汇编转镜像的程序
    * <a href = "./tools/eding.exe">eding.exe</a>    -- 合并两个映像文件的工具
-   * fdimd0at.tek -- <a href = "./tools/edimg.exe">edimg.exe</a> 的辅助程序，代表空白软盘
+   * <a href = "/toosl/fdimd0at.tek">fdimd0at.tek</a> -- <a href = "./tools/edimg.exe">edimg.exe</a> 的辅助程序，代表空白软盘
    * <a href = "./tools/cc1.exe">cc1.exe</a>     -- c语言转汇编的程序，由gcc改造而来
-   * <a href = "./tools/gas2nask.exe">gas2nask.exe</a></a> --将gas汇编转化为nask汇编，以便自己的操作系统可以读取
-   * obj2bim  --链接器, 把<a href = "./tools/nask.exe">nask.exe</a> 产生的未链接的文件链接起来
-   * <a href = "./tools/makefont.exe">makefont.exe</a> --将hankaku字模转化成.bin文件的工具
-   * <a href = "./tools/bin2obj.exe">bin2obj.exe</a> --将<a href = "./tools/makefont.exe">makefont.exe</a>产出的bin文件转化成.obj文件的工具
+   * <a href = "./tools/gas2nask.exe">gas2nask.exe</a> --将gas汇编转化为nask汇编，以便自己的操作系统可以读取
+   * <a href = "./tools/obj2bim.exe">obj2bim.exe</a>  --链接器, 把<a href = "./tools/nask.exe">nask.exe</a> 产生的未链接的文件链接起来
+   * <a href = "./tools/makefont.exe">makefont.exe</a> --将hankaku字模转化成 **.bin** 后缀文件的工具
+   * <a href = "./tools/bin2obj.exe">bin2obj.exe</a> --将<a href = "./tools/makefont.exe">makefont.exe</a>产出的 **.bin** 后缀文件转化成.obj文件的工具
    * MyTools:
      * <a href = "./tools/hankaku2hex.exe">hankaku2hex.exe</a> --将作者提供的hankaku字模转化成16进制
 
@@ -27,10 +27,15 @@
 
 1. 使用汇编编写了磁盘的格式
 2. 汇编命令
-   * **DB**:<br> “define byte”的缩写，也就是往文件里直接写入1个字节的指令
-   * **DW**:<br> "define world"的缩写，也就是往文件里直接写入2个字节的指令
-   * **DD**:<br> "define double-world"的缩写，也就是往文件里直接写入4个字节的指令
-   * RESB:<br> 预留空间
+   * **DB**: “define byte”的缩写，也就是往文件里直接写入1个字节的指令
+   * **DW**: "define world"的缩写，也就是往文件里直接写入2个字节的指令
+   * **DD**: "define double-world"的缩写，也就是往文件里直接写入4个字节的指令
+   * **RESB**: 预留空间
+   * **IN**:读取端口信息的命令
+   * **OUT**: 写入端口信息的命令
+   * **CLI**: clear interupt的缩写, 意为禁止中断
+   * **STI**: set interupt的缩写, 意为开启中断
+
 3. 寄存器
    * <br><center>8位寄存器</center>
       ![avatar](./img/8位寄存器.png)
@@ -83,7 +88,7 @@
           RET
 
       ```
-   * 写好汇编文件后使用 <a href = "./tools/naks.exe">naks.exe</a> 生成obj 文件在obj2bim步加入一起链接即可
+   * 写好汇编文件后使用 <a href = "./tools/nask.exe">nask.exe</a> 生成obj 文件在obj2bim步加入一起链接即可
 
 ## Day04
 
@@ -103,8 +108,30 @@
 
 ## Day05
 1. 绘制屏幕
-   * 屏幕的基本信息存放在内存0x0ff0处。其中0x0ff4-0x0ff5是屏幕宽(X轴, **横的轴**)长度, 0x0ff6-0xff7是屏幕长(Y轴,**竖的轴**)
+   * 屏幕的基本信息存放在内存0x0ff0处。其中0x0ff4-0x0ff5的两字节储存的是屏幕宽(X轴, **横的轴**)长度, 0x0ff6-0xff7的两字节储存的是屏幕长(Y轴,**竖的轴**)
 2. 添加文字
    * 添加文字的基本原理就是使用字模在对应的像素点上色
    * 作者提供了一个hankaku字模库,将字模转化成16进制后就可以使用。
-   * 编写了一个<a href = "./tools/MyTools/hankaku2hex.exe">hankaku2hex.exe</a>将hankaku.txt转化成对应的16进制。基本的字符入A-Za-z1-9储存在 ch * 16 + model 处 **(ch 是需要的字符, model 字模十六进制的指针)**
+   * (自己)编写了一个<a href = "./tools/MyTools/hankaku2hex.exe">hankaku2hex.exe</a>将hankaku.txt转化成对应的16进制。基本的字符如[A-Za-z1-9]储存在 ch * 16 + model 处 **(ch 是需要的字符对应的ACSII, model 字模十六进制的指针, 注意其他的字符可能不是在这个位置，具体参考hankaku.txt)**
+3. 添加鼠标
+   * 直接使用鼠标模然后再屏幕上显示出来
+   ```c
+   作者提供的鼠标图案(*^_^*)
+   static char cursor[16][16] = {
+        "**************..", 
+        "*OOOOOOOOOOO*...", 
+        "*OOOOOOOOOO*....",
+        "*OOOOOOOOO*.....", 
+        "*OOOOOOOO*......", 
+        "*OOOOOOO*.......",
+        "*OOOOOOO*.......", 
+        "*OOOOOOOO*......", 
+        "*OOOO**OOO*.....",
+        "*OOO*..*OOO*....", 
+        "*OO*....*OOO*...", 
+        "*O*......*OOO*..",
+        "**........*OOO*.", 
+        "*..........*OOO*", 
+        "............*OO*",
+        ".............***"};
+   ```
