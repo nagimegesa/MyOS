@@ -1,9 +1,12 @@
-- [文件结构及相关说明](#文件结构及相关说明)
-- [Day01](#day01)
-- [Day02](#day02)
-- [Day03](#day03)
-- [Day04](#day04)
-- [Day05](#day05)
+# 目录
+- [目录](#目录)
+  - [文件结构及相关说明](#文件结构及相关说明)
+  - [Day01](#day01)
+  - [Day02](#day02)
+  - [Day03](#day03)
+  - [Day04](#day04)
+  - [Day05](#day05)
+  - [Day06](#day06)
 
 ## 文件结构及相关说明
 
@@ -35,14 +38,15 @@
    * **OUT**: 写入端口信息的命令
    * **CLI**: clear interupt的缩写, 意为禁止中断
    * **STI**: set interupt的缩写, 意为开启中断
+   * **IRETD** : 中断程序执行完毕后返回原程序的指令
 
 3. 寄存器
    * <br><center>8位寄存器</center>
-      ![avatar](./img/8位寄存器.png)
+      ![8位寄存器](./img/8位寄存器.png)
    * <br><center>16位寄存器</center>
-      ![avatar](./img/16位寄存器.png)
+      ![16位寄存器](./img/16位寄存器.png)
    * <br><center>段位寄存器</center>
-      ![avatar](./img/段寄存器.png)
+      ![段寄存器](./img/段寄存器.png)
 
 ## Day02
 
@@ -56,7 +60,7 @@
    * 1张软盘有80个柱面，2个磁头，18个扇区，且一个扇区有512字节。所以，一张软盘的容量是：80×2×18×512 = 1 474 560 Byte = 1 440KB
    * IPL.asm读取了正反两面磁盘的2-18扇区(反面是0-18)的0-9柱面(总共 2 * 10 * 18 * 512 = 184320 字节)到0x80000处
    * 内存中程序的分布情况见下图
-      ![pic](./img/内存分布.png) <br><center>内存分布图 </center>
+      ![内存分布图](./img/内存分布.png) <br><center>内存分布图 </center>
 2. 正式开始制作操作系统
 
    * 编写MyOS.asm 为操作系统源码, 生成MyOS.sys文件
@@ -135,3 +139,33 @@
         "............*OO*",
         ".............***"};
    ```
+## Day06
+1. 初始化GDT, IDT, 和 PIC
+   * GDT即global (segment) descriptor table，译为全局段表, 负责记录整个系统的段分布情况
+   * IDT即interrupt descriptor table，译为中断记录表, 负责记录中断程序所处的位置
+   * PIC即programmable interrupt controller, 译为可编程中断控制器, 负责将外设中断高阻CPU(见下图)
+   * 在这里书的作者决定使用用0x00270000 ~ 0x27ffff做为内存中存放GDT的地址 **(总共8192个段)**, 使用0x26f800 ~ 0x26ffff作为存放IDT的地址 **(总共有256个中断)**
+2. 制作鼠标和键盘的中断程序
+   * 鼠标对应的中断是IQR12, 键盘对应的中断是IQR1
+   * 中断发生CPU需要保存当前指令相关信息，这里只能由汇编编写，通过汇编再跳转处理鼠标(键盘)相关的中断程序, 然后再使用汇编恢复现场
+   * 编写好了中断程序之后，再初始化IDT时需要将中断程序注册进入IDT
+   ~~~c
+   /**
+   * 鼠标和键盘对应的注册程序
+   * 键盘IQR1中断对应 idt + 0x21
+   * 鼠标IQR12中断对应 idt + 0x2c
+   * 第二个参数是对应中断的汇编代码地址
+   * 第三个参数是偏移量
+   * 第四个参数个该段的访问权限有关
+   */
+   setGatedesc(idt + 0x21, (int)asmKeyBoardInterrupt, 2 * 8, AR_INTGATE32);
+   setGatedesc(idt + 0x2c, (int)asmMouseInterrupt, 2 * 8, AR_INTGATE32);
+   ~~~
+3. PIC示意图 ![PIC示意图](.\img/PIC示意图.jpg)
+4. 修改了文件的目录结构
+   * interrupt.c(h) 存放系统中断相关代码
+   * dsctbl.c(h) 存放系统设置相关的代码
+   * graphic.c(h) 存放绘图相关的代码
+   * bootpack.c 使用主函数
+   * BaseFunction.s(h) 存放使用汇编编写的函数
+5. 由于未知原因 **.asm**后缀的汇编文件在vsCode 被识辨成C文件(╬▔皿▔)凸, 所以改成了 **.s**后缀的汇编文件

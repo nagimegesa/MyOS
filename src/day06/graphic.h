@@ -1,7 +1,17 @@
-#ifndef __OSSTD_H__
-#define __OSSTD_H__
+#ifndef __GRAPHIC_H__
+#define __GRAPHIC_H__
 
-#include "BaseFunction.h"
+// 储存屏幕信息的结构体
+struct Screen {
+    unsigned high, wide;
+    char *startAddr;  // 在显卡中的起始位置
+};
+
+struct Mouse {
+    int x, y;
+    struct Screen *screen;
+    char model[16][16];
+};
 
 // 初始化画板辅助函数, 也可自定义颜色
 void setPalette(int start, int end, unsigned char *rgb);
@@ -14,17 +24,11 @@ void drawRect(unsigned char *addr, const int xSize, const unsigned x,
               const unsigned int y, const unsigned wide, const unsigned high,
               const unsigned char COLOR);
 
-// 储存屏幕信息的结构体
-struct Screen {
-    unsigned high, wide;
-    char *startAddr;  // 在显卡中的起始位置
-};
+// 初始化鼠标
+void initMouse(struct Mouse *mouse, struct Screen *screen);
 
-struct Mouse {
-    int x, y;
-    struct Screen* screen;
-    char model[16][16];
-};
+// 绘制鼠标
+void drawMouse(const struct Mouse mouse);
 
 // 绘制屏幕
 void drawScreen(struct Screen screen);
@@ -36,34 +40,9 @@ void initScreen(struct Screen *screen);
 void putChar(const char ch, const struct Screen screen, const int x,
              const int y, const char color);
 
+// 在x, y位置放置字符串
 void putString(const char *str, const struct Screen screen, int x, int y,
                const char color);
-
-// 初始化鼠标
-void initMouse(struct Mouse *mouse, struct Screen *screen);
-
-// 绘制鼠标
-void drawMouse(const struct Mouse mouse);
-
-struct SEGMENT_DESCRIPTOR {
-    short limit_low, base_low;
-    char base_mid, access_right;
-    char limit_high, base_high;
-};
-
-struct GATE_DESCRIPTOR {
-    short offset_low, selector;
-    char dw_count, access_right;
-    short offset_high;
-};
-
-// 初始化gdt和idt
-void init_gdtidt(void);
-void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base,
-                  int ar);
-void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
-void load_gdtr(int limit, int addr);
-void load_idtr(int limit, int addr);
 
 // BIOS 颜色
 #define COLOR_BLACK 0             // 黑
