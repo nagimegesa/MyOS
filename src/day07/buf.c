@@ -1,28 +1,27 @@
 #include "buf.h"
 
-struct KeyBoardBuf keyBoardBuf;
-void keyBufInit() {
-    for (int i = 0; i < 32; ++i) keyBoardBuf.buf[i] = 0x00;
-    keyBoardBuf.head = 1;
-    keyBoardBuf.tail = 0;
-    keyBoardBuf.len = 0;
+void FIFOInit(struct FIFOBuf* FIFObuf, char* buf, int size) {
+    for (int i = 0; i < 32; ++i) FIFObuf->buf[i] = 0x00;
+    FIFObuf->head = 1;
+    FIFObuf->tail = 0;
+    FIFObuf->len = 0;
+    FIFObuf->maxLen = size;
+    FIFObuf->buf = buf;
 }
 
-void keyBufPush(const unsigned char key) {
-    keyBoardBuf.buf[keyBoardBuf.head++] = key;
-    keyBoardBuf.head %= 32;
-    ++keyBoardBuf.len;
+void FIFOPush(struct FIFOBuf* buf, const unsigned char key) {
+    buf->buf[buf->head++] = key;
+    buf->head %= buf->maxLen;
+    ++buf->len;
 }
 
-const unsigned char keyBufPop() {
-    unsigned char key = keyBoardBuf.buf[keyBoardBuf.tail++];
-    keyBoardBuf.tail %= 32;
-    --keyBoardBuf.len;
+const unsigned char FIFOPop(struct FIFOBuf* buf) {
+    unsigned char key = buf->buf[buf->tail++];
+    buf->tail %= buf->maxLen;
+    --buf->len;
     return key;
 }
 
-const char isKeyBufEmpty() {
-    return keyBoardBuf.head % 32 == (keyBoardBuf.tail + 1) % 32;
-}
+const char isFIFOEmpty(struct FIFOBuf* buf) { return buf->len == 0; }
 
-const char isKeyBufMax() { return keyBoardBuf.len == 32; }
+const char isFIFOMax(struct FIFOBuf* buf) { return buf->len == buf->maxLen; }

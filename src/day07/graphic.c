@@ -2,6 +2,7 @@
 
 #include "BaseFunction.h"
 #include "MyFont.h"
+#include "mouse.h"
 
 // 初始化调色板
 void initPalette(void) {
@@ -63,47 +64,6 @@ void initScreen(struct Screen *screen) {
 void drawScreen(struct Screen screen) {
     drawRect(screen.startAddr, screen.wide, 0, 0, screen.wide, screen.high,
              COLOR_LIGHT_DARK_BLUE);
-}
-
-// 初始化鼠标
-void initMouse(struct Mouse *mouse, struct Screen *screen) {
-    static char cursor[16][16] = {
-        "**************..", "*OOOOOOOOOOO*...", "*OOOOOOOOOO*....",
-        "*OOOOOOOOO*.....", "*OOOOOOOO*......", "*OOOOOOO*.......",
-        "*OOOOOOO*.......", "*OOOOOOOO*......", "*OOOO**OOO*.....",
-        "*OOO*..*OOO*....", "*OO*....*OOO*...", "*O*......*OOO*..",
-        "**........*OOO*.", "*..........*OOO*", "............*OO*",
-        ".............***"};
-    mouse->screen = screen;
-    mouse->x = screen->wide / 2;
-    mouse->y = screen->high / 2;
-    for (int i = 0; i < 16; ++i) {
-        for (int j = 0; j < 16; ++j) {
-            if (cursor[i][j] == '*') {
-                mouse->model[i][j] = COLOR_BLACK;
-            } else if (cursor[i][j] == 'O') {
-                mouse->model[i][j] = COLOR_WHITE;
-            } else {
-                mouse->model[i][j] = -1;
-            }
-        }
-    }
-    return;
-}
-
-// 绘制鼠标
-void drawMouse(const struct Mouse mouse) {
-    const int x = mouse.x, y = mouse.y;
-    char *addr = mouse.screen->startAddr;
-    const unsigned wide = mouse.screen->wide;
-    for (int i = 0; i < 16; ++i) {
-        const unsigned tmp = (y + i) * wide + x;
-        for (int j = 0; j < 16; ++j) {
-            if (mouse.model[i][j] != (char)-1) {
-                addr[tmp + j] = mouse.model[i][j];
-            }
-        }
-    }
 }
 
 // 在x, y位置放置一个字符 ch

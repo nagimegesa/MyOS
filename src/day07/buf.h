@@ -1,16 +1,14 @@
 #ifndef __BUF_H__
 #define __BUF_H__
 
-struct KeyBoardBuf {
-    unsigned char buf[32];
-    unsigned char head, tail, len;
+struct FIFOBuf {
+    unsigned char* buf;
+    unsigned char head, tail, len, maxLen;
 };
-
-extern struct KeyBoardBuf keyBoardBuf;
-void keyBufInit();
-const char isKeyBufEmpty();
-const char isKeyBufMax();
-void keyBufPush(const unsigned char key);
-const unsigned char keyBufPop();
+void FIFOInit(struct FIFOBuf* FIFObuf, char* buf, int size);
+const char isFIFOEmpty(struct FIFOBuf* buf);
+const char isFIFOMax(struct FIFOBuf* buf);
+void FIFOPush(struct FIFOBuf* buf, const unsigned char key);
+const unsigned char FIFOPop(struct FIFOBuf* buf);
 
 #endif

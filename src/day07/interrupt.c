@@ -3,7 +3,9 @@
 #include <stdio.h>
 
 #include "BaseFunction.h"
-#include "buf.h";
+#include "KeyBoard.h"
+#include "mouse.h"
+
 // 初始化PIC
 void initPic(void) {
     writePort8(PIC0_IMR, 0xff);  // 禁止所有中断
@@ -25,9 +27,9 @@ void initPic(void) {
 
 // 键盘的中断
 void keyBoardInterrupt(int* esp) {
-    struct KeyBoardBuf keyBoardBuf;
+    struct KeyBoardBuf* buf = getKeyBuf();
     writePort8(PIC0_OCW2, 0x61);
-    if (!isKeyBufMax()) keyBufPush(readPort8(0x0060));
+    if (!isKeyBufMax(buf)) keyBufPush(buf, readPort8(0x0060));
 }
 
 // 鼠标中断

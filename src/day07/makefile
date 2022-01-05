@@ -13,7 +13,8 @@ MAKEFONT = $(TOOLPATH)makefont.exe
 BIN2OBJ  = $(TOOLPATH)bin2obj.exe
 
 TRAGET = BaseFunction.obj graphic.obj dsctbl.obj \
-	bootpack.obj interrupt.obj
+	bootpack.obj interrupt.obj buf.obj KeyBoard.obj \
+	mouse.obj
 
 defualt:
 	$(MAKE) MyOS.img

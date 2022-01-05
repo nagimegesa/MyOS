@@ -7,11 +7,7 @@ struct Screen {
     char *startAddr;  // 在显卡中的起始位置
 };
 
-struct Mouse {
-    int x, y;
-    struct Screen *screen;
-    char model[16][16];
-};
+
 
 // 初始化画板辅助函数, 也可自定义颜色
 void setPalette(int start, int end, unsigned char *rgb);
@@ -24,11 +20,6 @@ void drawRect(unsigned char *addr, const int xSize, const unsigned x,
               const unsigned int y, const unsigned wide, const unsigned high,
               const unsigned char COLOR);
 
-// 初始化鼠标
-void initMouse(struct Mouse *mouse, struct Screen *screen);
-
-// 绘制鼠标
-void drawMouse(const struct Mouse mouse);
 
 // 绘制屏幕
 void drawScreen(struct Screen screen);
