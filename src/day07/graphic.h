@@ -7,8 +7,6 @@ struct Screen {
     char *startAddr;  // 在显卡中的起始位置
 };
 
-
-
 // 初始化画板辅助函数, 也可自定义颜色
 void setPalette(int start, int end, unsigned char *rgb);
 
@@ -16,10 +14,9 @@ void setPalette(int start, int end, unsigned char *rgb);
 void initPalette(void);
 
 // 绘制矩形
-void drawRect(unsigned char *addr, const int xSize, const unsigned x,
-              const unsigned int y, const unsigned wide, const unsigned high,
+void drawRect(struct Screen screen, const unsigned x, const unsigned int y,
+              const unsigned wide, const unsigned high,
               const unsigned char COLOR);
-
 
 // 绘制屏幕
 void drawScreen(struct Screen screen);

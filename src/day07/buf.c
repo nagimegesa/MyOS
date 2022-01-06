@@ -9,10 +9,14 @@ void FIFOInit(struct FIFOBuf* FIFObuf, char* buf, int size) {
     FIFObuf->buf = buf;
 }
 
-void FIFOPush(struct FIFOBuf* buf, const unsigned char key) {
-    buf->buf[buf->head++] = key;
-    buf->head %= buf->maxLen;
-    ++buf->len;
+char FIFOPush(struct FIFOBuf* buf, const unsigned char key) {
+    if (buf->len <= buf->maxLen) {
+        buf->buf[buf->head++] = key;
+        buf->head %= buf->maxLen;
+        ++buf->len;
+        return 1;
+    }
+    return -1;
 }
 
 const unsigned char FIFOPop(struct FIFOBuf* buf) {

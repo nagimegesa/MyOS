@@ -174,12 +174,36 @@
    *  发生中断时, 需要向对应的端口写入收到中断的信号, 然后再读中断的信息, 要不然CUP将不能再次检测中断的产生
    ~~~c
    /**
-    * 这里已键盘中断为例
-    * writePort8 向PIC通知已收到中断, 其中0x61 = 0x60 + 1  1 对应键盘的IQR1中断
-    * readPort8 读取中断产生的相关信息 0x0060对应键盘设备，这里是规定
+    * 这里以鼠标中断为例
+    * writePort8 向PIC通知已收到中断, 应为鼠标对应的是PIC1, 从属PIC于, 故先通知PIC0, 再由PIC0转告CPU接收到中断
+    * 0x64 = 0x60 + 4 对应IRQ12
+    * 0x62 = 0x60 + 2 对应IRQ2
+    * readPort8 读取中断产生的相关信息 0x0060对应(鼠标和键盘)设备，这里是规定
    */
-   writePort8(PIC0_OCW2, 0x61);
-   readPort8(0x0060)
+   void mouseInterrupt(int* esp) {
+      struct MouseBuf* buf = getMouseBuf();
+      writePort8(PIC1_OCW2, 0X64);
+      writePort8(PIC0_OCW2, 0X62);
+      mouseBufPush(buf, readPort8(PORT_KEYDAT));
+   }
    ~~~
-2. 处理键盘中断
-   * 为了加快键盘中断的处理速度，这里采用了一个储存32个字符的环形队列作为缓冲区 **(FIFO结构)**, 然后在OSMain里集中处理所有的信息
+2. 处理中断处理速度
+   * 为了加快键盘和鼠标中断的处理速度，这里采用了一个储存 **32(128)** 个字符的环形队列作为缓冲区 **(FIFO结构)**, 然后在OSMain里集中处理所有的信息
+3. 处理鼠标中断
+   * 由于历史原因, 使用鼠标中断的时候要先启动鼠标中断的电路, 否则CPU将不能接收到鼠标中断的信息。
+   * 鼠标中断的电路被设计在启动键盘的电路中, 所以要先启动键盘, 才能启动鼠标
+   ~~~c
+   // 激活鼠标
+   void initMouseDevice() {
+      waitKeyBoardReady();
+      writePort8(PORT_KEYCMD, KEYCMD_SENDTO_MOUSE);
+      waitKeyBoardReady();
+      writePort8(PORT_KEYDAT, MOUSECMD_ENABLE);
+      return;
+      // 顺利的话,键盘控制其会返送回ACK(0xfa)
+   }
+   ~~~
+4. 再次修改了文件结构, (●ˇ∀ˇ●)
+   * buf.c(h) 存放一些缓冲区用的数据结构
+   * KeyBoard.c(h) 存放键盘缓冲区具体设计,即相关函数
+   * mouse.c(h) 存放鼠标缓冲区设计, 即相关函数

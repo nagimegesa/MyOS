@@ -7,12 +7,16 @@ struct KeyBoardBuf {
     struct FIFOBuf buf;
 };
 
-const char isKeyBufEmpty(struct KeyBoardBuf* buf) { return isFIFOEmpty(&buf->buf); }
+const char isKeyBufEmpty(struct KeyBoardBuf* buf) {
+    return isFIFOEmpty(&buf->buf);
+}
 const char isKeyBufMax(struct KeyBoardBuf* buf) { return isFIFOMax(&buf->buf); }
-const unsigned char keyBufPop(struct KeyBoardBuf* buf) { return FIFOPop(&buf->buf); }
+const unsigned char keyBufPop(struct KeyBoardBuf* buf) {
+    return FIFOPop(&buf->buf);
+}
 
-void keyBufPush(struct KeyBoardBuf* buf, const unsigned char key) {
-    FIFOPush(&buf->buf, key);
+const char keyBufPush(struct KeyBoardBuf* buf, const unsigned char key) {
+    return FIFOPush(&buf->buf, key);
 }
 
 void keyBufInit(struct KeyBoardBuf* buf) {

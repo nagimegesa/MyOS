@@ -29,11 +29,16 @@ void initPic(void) {
 void keyBoardInterrupt(int* esp) {
     struct KeyBoardBuf* buf = getKeyBuf();
     writePort8(PIC0_OCW2, 0x61);
-    if (!isKeyBufMax(buf)) keyBufPush(buf, readPort8(0x0060));
+    keyBufPush(buf, readPort8(PORT_KEYDAT));
 }
 
 // 鼠标中断
-void mouseInterrupt(int* esp) {}
+void mouseInterrupt(int* esp) {
+    struct MouseBuf* buf = getMouseBuf();
+    writePort8(PIC1_OCW2, 0X64);
+    writePort8(PIC0_OCW2, 0X62);
+    mouseBufPush(buf, readPort8(PORT_KEYDAT));
+}
 
 void inthandler27(int* esp)
 //  PIC0中断的不完整策略

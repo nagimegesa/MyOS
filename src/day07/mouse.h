@@ -16,11 +16,11 @@ void drawMouse(const struct Mouse* mouse);
 void initMouseDevice();
 
 struct MouseBuf* getMouseBuf();
-void MouseBufInit(struct MouseBuf* MouseBuf);
+void mouseBufInit(struct MouseBuf* MouseBuf);
 const char isMouseBufEmpty(struct MouseBuf* buf);
 const char isMouseBufMax(struct MouseBuf* buf);
-void MouseBufPush(struct MouseBuf* buf, const unsigned char key);
-const unsigned char MouseBufPop(struct MouseBuf* buf);
+const char mouseBufPush(struct MouseBuf* buf, const unsigned char key);
+const unsigned char mouseBufPop(struct MouseBuf* buf);
 
 #define KEYCMD_SENDTO_MOUSE 0xd4
 #define MOUSECMD_ENABLE 0xf4

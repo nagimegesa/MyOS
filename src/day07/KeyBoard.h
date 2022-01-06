@@ -7,7 +7,7 @@ void keyBoardInit();
 void keyBufInit(struct KeyBoardBuf* buf);
 const char isKeyBufEmpty(struct KeyBoardBuf* buf);
 const char isKeyBufMax(struct KeyBoardBuf* buf);
-void keyBufPush(struct KeyBoardBuf* buf, const unsigned char key);
+const char keyBufPush(struct KeyBoardBuf* buf, const unsigned char key);
 const unsigned char keyBufPop(struct KeyBoardBuf* buf);
 
 #define PORT_KEYDAT 0x0060

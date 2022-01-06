@@ -43,9 +43,11 @@ void setPalette(int start, int end, unsigned char *rgb) {
     return;
 }
 
-void drawRect(unsigned char *addr, const int xSize, const unsigned x,
-              const unsigned y, const unsigned wide, const unsigned high,
+void drawRect(struct Screen screen, const unsigned x, const unsigned y,
+              const unsigned wide, const unsigned high,
               const unsigned char COLOR) {
+    char *addr = screen.startAddr;
+    const unsigned xSize = screen.wide;
     const int x1 = x + wide, y1 = y + high;
     for (int i = y; i <= y1; ++i) {
         for (int j = x; j <= x1; ++j) {
@@ -62,7 +64,7 @@ void initScreen(struct Screen *screen) {
 }
 
 void drawScreen(struct Screen screen) {
-    drawRect(screen.startAddr, screen.wide, 0, 0, screen.wide, screen.high,
+    drawRect(screen, 0, 0, screen.wide, screen.high,
              COLOR_LIGHT_DARK_BLUE);
 }
 

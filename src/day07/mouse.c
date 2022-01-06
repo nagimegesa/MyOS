@@ -62,21 +62,21 @@ void initMouseDevice() {
     /* 顺利的话,键盘控制其会返送回ACK(0xfa)*/
 }
 
+const char isMouseBufMax(struct MouseBuf *buf) { return isFIFOMax(&buf->buf); }
+const unsigned char mouseBufPop(struct MouseBuf *buf) {
+    return FIFOPop(&buf->buf);
+}
 const char isMouseBufEmpty(struct MouseBuf *buf) {
     return isFIFOEmpty(&buf->buf);
 }
-const char isMouseBufMax(struct MouseBuf *buf) { return isFIFOMax(&buf->buf); }
-const unsigned char MouseBufPop(struct MouseBuf *buf) {
-    return FIFOPop(&buf->buf);
-}
-void MouseBufPush(struct MouseBuf *buf, const unsigned char key) {
-    FIFOPush(&buf->buf, key);
+const char mouseBufPush(struct MouseBuf *buf, const unsigned char key) {
+    return FIFOPush(&buf->buf, key);
 }
 struct MouseBuf *getMouseBuf() {
     static struct MouseBuf buf;
     return &buf;
 }
-void MouseBufInit(struct MouseBuf *mouseBuf) {
+void mouseBufInit(struct MouseBuf *mouseBuf) {
     static char buf[128];
     FIFOInit(&mouseBuf->buf, buf, 128);
 }

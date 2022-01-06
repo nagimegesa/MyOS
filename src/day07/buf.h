@@ -8,7 +8,7 @@ struct FIFOBuf {
 void FIFOInit(struct FIFOBuf* FIFObuf, char* buf, int size);
 const char isFIFOEmpty(struct FIFOBuf* buf);
 const char isFIFOMax(struct FIFOBuf* buf);
-void FIFOPush(struct FIFOBuf* buf, const unsigned char key);
+char FIFOPush(struct FIFOBuf* buf, const unsigned char key);
 const unsigned char FIFOPop(struct FIFOBuf* buf);
 
 #endif
