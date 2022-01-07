@@ -8,7 +8,7 @@
 struct Mouse {
     int x, y;
     struct Screen *screen;
-    char **model;
+    char model[16][16];
 };
 
 struct MouseBuf {
@@ -31,7 +31,17 @@ void initMouse(struct Mouse *mouse, struct Screen *screen) {
     mouse->screen = screen;
     mouse->x = screen->wide / 2;
     mouse->y = screen->high / 2;
-    mouse->model = cursor;
+    for (int i = 0; i < 16; ++i) {
+        for (int j = 0; j < 16; ++j) {
+            if (cursor[i][j] == '*') {
+                mouse->model[i][j] = COLOR_BLACK;
+            } else if (cursor[i][j] == 'O') {
+                mouse->model[i][j] = COLOR_WHITE;
+            } else {
+                mouse->model[i][j] = -1;
+            }
+        }
+    }
     return;
 }
 

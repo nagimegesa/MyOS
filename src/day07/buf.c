@@ -20,10 +20,13 @@ char FIFOPush(struct FIFOBuf* buf, const unsigned char key) {
 }
 
 const unsigned char FIFOPop(struct FIFOBuf* buf) {
-    unsigned char key = buf->buf[buf->tail++];
-    buf->tail %= buf->maxLen;
-    --buf->len;
-    return key;
+    if (buf->len >= 0) {
+        unsigned char key = buf->buf[buf->tail++];
+        buf->tail %= buf->maxLen;
+        --buf->len;
+        return key;
+    }
+    return 0;
 }
 
 const char isFIFOEmpty(struct FIFOBuf* buf) { return buf->len == 0; }
