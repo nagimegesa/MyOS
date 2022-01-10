@@ -5,6 +5,7 @@
 #include "dsctbl.h"
 #include "graphic.h"
 #include "interrupt.h"
+#include "memory.h"
 #include "mouse.h"
 
 void dealKeyBoardInterrupt(struct KeyBoardBuf* buf, struct Screen screen);
@@ -33,9 +34,16 @@ void OSMain(void) {
 
     keyBoardInit();
     initMouseDevice();
-    char buf[10];
+    char buf[40];
     unsigned memSize = memtest(0x00400000, 0xbfffffff);
-    sprintf(buf, "%dMB", memSize / 1024 / 1024);
+
+    memoryMangerInit(getMemoryManger());
+    int tmp = 1;
+    tmp = memoryFree(0x00001000, 0x0009e000); /* 0x00001000 - 0x0009efff */
+    memoryFree(0x00400000, memSize - 0x00400000);
+
+    sprintf(buf, "memory %dMB free: %dKb %d", memSize / 1024 / 1024,
+            getFreeMemorySize() / 1024, tmp);
     putString(buf, screen, 20, 20, COLOR_WHITE);
     for (;;) {
         setLock();

@@ -51,26 +51,3 @@ void setGatedesc(struct GateDescriptor *gd, int offset, int selector, int ar) {
     gd->offsetHigh = (offset >> 16) & 0xffff;
     return;
 }
-
-unsigned memtest(unsigned start, unsigned end) {
-    char is486 = 0;
-    unsigned lockTag = getLockTag();
-    lockTag |= EFLAGS_AC_BIT;
-    setLockTag(lockTag);
-    lockTag = getLockTag();
-    if (lockTag & EFLAGS_AC_BIT) is486 = 1;
-    lockTag &= ~EFLAGS_AC_BIT;
-    setLockTag(lockTag);
-    if (is486) {
-        char cr0Tag = getCR0();
-        cr0Tag |= CR0_CACHE_DISABLE;
-        setCR0(cr0Tag);
-    }
-    unsigned memSize = memoryTestSub(start, end);
-    if (is486) {
-        char cr0Tag = getCR0();
-        cr0Tag &= ~CR0_CACHE_DISABLE;
-        setCR0(cr0Tag);
-    }
-    return memSize;
-}
