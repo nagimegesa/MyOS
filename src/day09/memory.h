@@ -11,8 +11,14 @@ void memoryMangerInit(struct MemoryManger*);
 // 分配内存空间
 void* memoryAlloc(unsigned int size);
 
+// 按4K大小分配空间
+void* memoryAlloc4K(unsigned size);
+
 // 释放内存空间 返回0成功, 1失败
 int memoryFree(int addr, unsigned size);
+
+// 按4k大小释放空间
+int memoryFree4K(int addr, unsigned size);
 
 // 获得可用内存空间数量
 unsigned getFreeMemorySize();

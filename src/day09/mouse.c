@@ -116,15 +116,15 @@ void changeMouseStat(struct MouseBuf *buf, struct Screen screen) {
     if (mousePrase != -1) {
         chBuf[mousePrase++] = ch;
         if (mousePrase == 3) {
-                struct MouseStat *stat = getMouseStat();
-                mousePrase = 0;
-                cnt = 0;
-                stat->btn = chBuf[0] & 0x07;
-                stat->offsetx = chBuf[1];
-                stat->offsety = chBuf[2];
-                if (chBuf[0] & 0x10) stat->offsetx |= 0xffffff00;
-                if (chBuf[0] & 0x20) stat->offsety |= 0xffffff00;
-                stat->offsety = -stat->offsety;
+            struct MouseStat *stat = getMouseStat();
+            mousePrase = 0;
+            cnt = 0;
+            stat->btn = chBuf[0] & 0x07;
+            stat->offsetx = chBuf[1];
+            stat->offsety = chBuf[2];
+            if (chBuf[0] & 0x10) stat->offsetx |= 0xffffff00;
+            if (chBuf[0] & 0x20) stat->offsety |= 0xffffff00;
+            stat->offsety = -stat->offsety;
         }
     } else if (ch == 0xfa)
         mousePrase = 0;
@@ -143,4 +143,14 @@ void dealMouseStatChange(struct Screen screen) {
     if (mouse->y >= screen.high - MOUSE_HIGH)
         mouse->y = screen.high - MOUSE_HIGH;
     drawMouse(mouse);
+}
+// 按4K大小分配空间
+void *memoryAlloc4K(unsigned size) {
+    size = (size + 0xfff) & 0xfffff000;
+    return memoryAlloc(size);
+}
+// 按4k大小释放空间
+int memoryFree4K(int addr, unsigned size) {
+    size = (size + 0xfff) & 0xfffff000;
+    return memoryFree(size);
 }
