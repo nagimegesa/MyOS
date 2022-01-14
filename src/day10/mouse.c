@@ -4,35 +4,15 @@
 #include <stdio.h>
 
 #include "BaseFunction.h"
-#include "buf.h"
 #include "graphic.h"
+#include "memory.h"
 
-struct Mouse {
-    int x, y;
-    struct Screen *screen;
-    char model[16][16];
-};
-
-struct MouseBuf {
-    struct FIFOBuf buf;
-};
-
-struct MouseStat {
-    char btn;
-    int offsetx, offsety;
-};
-
-struct Mouse *getMouse() {
-    static struct Mouse mouse;
-    return &mouse;
-}
-
-struct MouseStat *getMouseStat() {
+MouseStat *getMouseStat() {
     static struct MouseStat stat;
     return &stat;
 };
 
-void initMouse(struct Mouse *mouse, struct Screen *screen) {
+Sheet *initMouse() {
     static char cursor[16][16] = {
         "**************..", "*OOOOOOOOOOO*...", "*OOOOOOOOOO*....",
         "*OOOOOOOOO*.....", "*OOOOOOOO*......", "*OOOOOOO*.......",
@@ -40,38 +20,28 @@ void initMouse(struct Mouse *mouse, struct Screen *screen) {
         "*OOO*..*OOO*....", "*OO*....*OOO*...", "*O*......*OOO*..",
         "**........*OOO*.", "*..........*OOO*", "............*OO*",
         ".............***"};
-    mouse->screen = screen;
-    mouse->x = screen->wide / 2;
-    mouse->y = screen->high / 2;
-    for (int i = 0; i < 16; ++i) {
-        for (int j = 0; j < 16; ++j) {
-            if (cursor[i][j] == '*') {
-                mouse->model[i][j] = COLOR_BLACK;
-            } else if (cursor[i][j] == 'O') {
-                mouse->model[i][j] = COLOR_WHITE;
-            } else {
-                mouse->model[i][j] = -1;
-            }
-        }
-    }
-    return;
-}
+    Sheet *mouse = getEmptySheet();
+    SheetInfo info;
+    info.height = 2;
+    info.high = 16;
+    info.wide = 16;
+    info.posx = getSheetManger()->wide / 2;
+    info.posy = getSheetManger()->high / 2;
+    char *model = memoryAlloc(sizeof(cursor));
 
-// 绘制鼠标
-void drawMouse(struct Mouse *mouse) {
-    const int x = mouse->x, y = mouse->y;
-    char *addr = mouse->screen->startAddr;
-    const unsigned wide = mouse->screen->wide;
-    drawRect(*mouse->screen, mouse->x, mouse->y, MOUSE_WIDE, MOUSE_HIGH,
-             mouse->screen->color);
-    for (int i = 0; i < 16; ++i) {
-        const unsigned tmp = (y + i) * wide + x;
-        for (int j = 0; j < 16; ++j) {
-            if (mouse->model[i][j] != (char)-1) {
-                addr[tmp + j] = mouse->model[i][j];
+    for (int i = 0; i < MOUSE_HIGH; ++i) {
+        for (int j = 0; j < MOUSE_WIDE; ++j) {
+            if (cursor[i][j] == '*') {
+                model[i * MOUSE_WIDE + j] = COLOR_BLACK;
+            } else if (cursor[i][j] == 'O') {
+                model[i * MOUSE_WIDE + j] = COLOR_WHITE;
+            } else {
+                model[i * MOUSE_WIDE + j] = COLOR_NONE;
             }
         }
     }
+    emptySheetInit(mouse, model, info);
+    return mouse;
 }
 
 // 定义在KeyBoard.c
@@ -86,29 +56,26 @@ void initMouseDevice() {
     /* 顺利的话,键盘控制其会返送回ACK(0xfa)*/
 }
 
-const char isMouseBufMax(struct MouseBuf *buf) { return isFIFOMax(&buf->buf); }
-const unsigned char mouseBufPop(struct MouseBuf *buf) {
-    return FIFOPop(&buf->buf);
-}
-const char isMouseBufEmpty(struct MouseBuf *buf) {
-    return isFIFOEmpty(&buf->buf);
-}
-const char mouseBufPush(struct MouseBuf *buf, const unsigned char key) {
+const char isMouseBufMax(MouseBuf *buf) { return isFIFOMax(&buf->buf); }
+const unsigned char mouseBufPop(MouseBuf *buf) { return FIFOPop(&buf->buf); }
+const char isMouseBufEmpty(MouseBuf *buf) { return isFIFOEmpty(&buf->buf); }
+const char mouseBufPush(MouseBuf *buf, const unsigned char key) {
     return FIFOPush(&buf->buf, key);
 }
-struct MouseBuf *getMouseBuf() {
+
+MouseBuf *getMouseBuf() {
     static struct MouseBuf buf;
     return &buf;
 }
-void mouseBufInit(struct MouseBuf *mouseBuf) {
+void mouseBufInit(MouseBuf *mouseBuf) {
     static unsigned char buf[128];
     FIFOInit(&mouseBuf->buf, buf, 128);
 }
-const int getMouseBufLen(struct MouseBuf *mouseBuf) {
+const int getMouseBufLen(MouseBuf *mouseBuf) {
     return getBufLen(&mouseBuf->buf);
 }
 
-void changeMouseStat(struct MouseBuf *buf, struct Screen screen) {
+void changeMouseStat(MouseBuf *buf) {
     static char chBuf[3];
     static int mousePrase = -1, cnt = 0;
     unsigned char ch = mouseBufPop(buf);
@@ -116,7 +83,7 @@ void changeMouseStat(struct MouseBuf *buf, struct Screen screen) {
     if (mousePrase != -1) {
         chBuf[mousePrase++] = ch;
         if (mousePrase == 3) {
-            struct MouseStat *stat = getMouseStat();
+            MouseStat *stat = getMouseStat();
             mousePrase = 0;
             cnt = 0;
             stat->btn = chBuf[0] & 0x07;
@@ -130,27 +97,15 @@ void changeMouseStat(struct MouseBuf *buf, struct Screen screen) {
         mousePrase = 0;
 }
 
-void dealMouseStatChange(struct Screen screen) {
-    struct MouseStat *stat = getMouseStat();
-    struct Mouse *mouse = getMouse();
-    drawRect(screen, mouse->x, mouse->y, MOUSE_WIDE, MOUSE_HIGH, screen.color);
-    mouse->x += stat->offsetx;
-    mouse->y += stat->offsety;
-    if (mouse->x <= 0) mouse->x = 0;
-    if (mouse->x >= screen.wide - MOUSE_WIDE)
-        mouse->x = screen.wide - MOUSE_WIDE;
-    if (mouse->y <= 0) mouse->y = 0;
-    if (mouse->y >= screen.high - MOUSE_HIGH)
-        mouse->y = screen.high - MOUSE_HIGH;
-    drawMouse(mouse);
-}
-// 按4K大小分配空间
-void *memoryAlloc4K(unsigned size) {
-    size = (size + 0xfff) & 0xfffff000;
-    return memoryAlloc(size);
-}
-// 按4k大小释放空间
-int memoryFree4K(int addr, unsigned size) {
-    size = (size + 0xfff) & 0xfffff000;
-    return memoryFree(size);
+void dealMouseStatChange(Sheet *mouse) {
+    MouseStat *stat = getMouseStat();
+    int x = mouse->info.posx + stat->offsetx;
+    int y = mouse->info.posy + stat->offsety;
+    const unsigned screenWide = getSheetManger()->wide;
+    const unsigned screenHigh = getSheetManger()->high;
+    if (x <= 0) x = 0;
+    if (y <= 0) y = 0;
+    if (x >= screenWide - MOUSE_WIDE) x = screenWide - MOUSE_WIDE;
+    if (y >= screenHigh - MOUSE_HIGH) y = screenHigh - MOUSE_HIGH;
+    sheetMove(mouse, x, y);
 }

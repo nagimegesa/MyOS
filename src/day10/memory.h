@@ -1,7 +1,7 @@
 #ifndef __MEMORY_H__
 #define __MEMORY_H__
 
-struct MemoryManger;
+typedef struct MemoryManger MemoryManger;
 
 struct MemoryManger* getMemoryManger();
 

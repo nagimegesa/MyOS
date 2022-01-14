@@ -2,8 +2,10 @@
 
 #include "BaseFunction.h"
 #include "MyFont.h"
+#include "memory.h"
 #include "mouse.h"
 
+typedef SheetManger Manger;
 // 初始化调色板
 void initPalette(void) {
     static unsigned char table_rgb[16 * 3] = {
@@ -43,12 +45,12 @@ void setPalette(int start, int end, unsigned char *rgb) {
     return;
 }
 
-void drawRect(struct Screen screen, const unsigned x, const unsigned y,
+void drawRect(Sheet *sheet, const unsigned x, const unsigned y,
               const unsigned wide, const unsigned high,
               const unsigned char COLOR) {
-    char *addr = screen.startAddr;
-    const unsigned xSize = screen.wide;
-    const int x1 = x + wide, y1 = y + high;
+    unsigned char *addr = sheet->buf;
+    const unsigned xSize = sheet->info.wide;
+    const int x1 = wide + x, y1 = y + high;
     for (int i = y; i <= y1; ++i) {
         for (int j = x; j <= x1; ++j) {
             addr[i * xSize + j] = COLOR;
@@ -57,24 +59,29 @@ void drawRect(struct Screen screen, const unsigned x, const unsigned y,
     return;
 }
 
-void initDesktop(struct Screen *screen) {
-    screen->wide = *(short *)0x0ff4;
-    screen->high = *(short *)0x0ff6;
-    screen->startAddr = (char *)(*(int *)0x0ff8);
-    screen->color = COLOR_LIGHT_DARK_BLUE;
-}
-
-void drawDesktop(struct Screen screen) {
-    drawRect(screen, 0, 0, screen.wide, screen.high, screen.color);
+Sheet *initDesktop() {
+    Manger *manger = getSheetManger();
+    Sheet *desktop = getEmptySheet();
+    SheetInfo info;
+    info.height = 0;
+    info.wide = manger->wide;
+    info.high = manger->high;
+    info.posx = 0;
+    info.posy = 0;
+    info.opacity = SHEET_OPAQUE;
+    info.tag = SHEET_USING;
+    char *buf = memoryAlloc(manger->high * manger->wide);
+    emptySheetInit(desktop, buf, info);
+    drawRect(desktop, 0, 0, manger->wide, manger->high, DESKTOP_COLOR);
+    return desktop;
 }
 
 // 在x, y位置放置一个字符 ch
-void putChar(const char ch, const struct Screen screen, const int x,
-             const int y, const char color) {
-    char *addr = (char *)screen.startAddr;
+void putChar(const char ch, Sheet *sheet, const int x, const int y,
+             const char color) {
+    unsigned char *addr = sheet->buf;
+    const unsigned xsize = sheet->info.wide;
     const char *model = __FontModel + 16 * ch;
-    const unsigned xsize = screen.wide;
-    drawRect(screen, x, y, FONT_WIDE, FONT_HIGH, screen.color);
     for (int i = 0; i < 16; i++) {
         const char d = model[i];
         char *p = addr + (y + i) * xsize + x;
@@ -87,13 +94,120 @@ void putChar(const char ch, const struct Screen screen, const int x,
         if ((d & 0x02) != 0) p[6] = color;
         if ((d & 0x01) != 0) p[7] = color;
     }
+    sheetRefreshSub(x, y, FONT_WIDE, FONT_HIGH);
     return;
 }
 
-void putString(const char *str, const struct Screen screen, int x, int y,
-               const char color) {
+void putString(const char *str, Sheet *sheet, int x, int y, const char color) {
     for (; *str != '\0'; ++str) {
-        putChar(*str, screen, x, y, color);
+        putChar(*str, sheet, x, y, color);
         x += 8;
+    }
+}
+
+void sheetMangerInit(Manger *manger) {
+    manger->wide = *(short *)0x0ff4;
+    manger->high = *(short *)0x0ff6;
+    manger->vram = (char *)(*(int *)0x0ff8);
+    manger->cnt = 0;
+    for (int i = 0; i < SHEET_MAX_CNT; ++i)
+        manger->sheet[i].info.tag = SHEET_UNUSE;
+}
+
+SheetManger *getSheetManger() {
+    static SheetManger manger;
+    return &manger;
+}
+
+Sheet *getEmptySheet() {
+    Manger *manger = getSheetManger();
+    for (int i = 0; i < SHEET_MAX_CNT; ++i)
+        if (manger->sheet[i].info.tag == SHEET_UNUSE) {
+            manger->sheet[i].info.tag = SHEET_USING;
+            manger->sheet[i].info.height = SHEET_HIDDEN;
+            manger->pSheet[manger->cnt++] = &manger->sheet[i];
+            return &manger->sheet[i];
+        }
+    return 0;
+}
+
+void emptySheetInit(Sheet *sheet, unsigned char *buf, SheetInfo info) {
+    sheet->buf = buf;
+    sheet->info = info;
+    sheet->info.tag = SHEET_USING;
+}
+
+void sheetChangeHeight(Sheet *sheet, int height) {
+    Manger *manger = getSheetManger();
+    height = height < SHEET_HIDDEN ? SHEET_HIDDEN : height;
+    height = height > manger->cnt - 1 ? manger->cnt - 1 : height;
+    sheet->info.height = height;
+    for (int i = 0; i < manger->cnt; ++i) {
+        int height = SHEET_HEIGHT_MAX;
+        int index = SHEET_MAX_CNT - 1;
+        for (int j = i; j < manger->cnt; ++j) {
+            int tmp = manger->pSheet[j]->info.height;
+            index = tmp < height ? j : index;
+            height = tmp < height ? tmp : height;
+        }
+        Sheet *tmp = manger->pSheet[index];
+        manger->pSheet[index] = manger->pSheet[i];
+        manger->pSheet[i] = tmp;
+    }
+    sheetRefresh(sheet);
+}
+
+void sheetMove(Sheet *sheet, int x, int y) {
+    int oldx = sheet->info.posx, oldy = sheet->info.posy;
+    sheet->info.posx = x, sheet->info.posy = y;
+    if (sheet->info.height > 0) {
+        sheetRefreshSub(oldx, oldy, sheet->info.wide, sheet->info.high);
+        sheetRefreshSub(x, y, sheet->info.wide, sheet->info.high);
+    }
+}
+
+void sheetFree(Sheet *sheet) {
+    Manger *manger = getSheetManger();
+    int index = 0;
+    for (; index < manger->cnt; ++index)
+        if (manger->pSheet[index] == sheet) break;
+    manger->pSheet[index]->info.tag = SHEET_UNUSE;
+    --manger->cnt;
+    for (int i = index; i < manger->cnt; ++i)
+        manger->pSheet[index] = manger->pSheet[index + 1];
+}
+
+void sheetRefresh(Sheet *sheet) {
+    if (sheet->info.height != SHEET_HIDDEN) {
+        sheetRefreshSub(sheet->info.posx, sheet->info.posy, sheet->info.wide,
+                        sheet->info.high);
+    }
+}
+
+void sheetRefreshSub(int x, int y, unsigned wide, unsigned high) {
+    Manger *manger = getSheetManger();
+    const unsigned screenWide = manger->wide;
+    char *addr = manger->vram;
+    for (int i = 0; i < manger->cnt; ++i) {
+        Sheet *sheet = manger->pSheet[i];
+        if (sheet->info.height != SHEET_HIDDEN) {
+            int x1 = sheet->info.posx;
+            int y1 = sheet->info.posy;
+            const unsigned wide1 = manger->pSheet[i]->info.wide;
+            const unsigned high1 = manger->pSheet[i]->info.high;
+            const int x2 = x1 + wide1 < x + wide ? x1 + wide1 : x + wide;
+            const int y2 = y1 + high1 < y + high ? y1 + high1 : y + high;
+            int x3 = x1 < x ? x : x1;
+            int y3 = y1 < y ? y : y1;
+            for (int i = y3; i < y2; ++i) {
+                int x4 = i - y1;
+                for (int j = x3; j < x2; ++j) {
+                    int tmp = x4 * wide1 + j - x1;
+                    if (sheet->buf[tmp] != COLOR_NONE) {
+                        addr[screenWide * i + j] = sheet->buf[tmp];
+                    }
+                }
+            }
+        }
     }
 }

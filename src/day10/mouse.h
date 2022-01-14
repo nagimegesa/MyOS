@@ -1,32 +1,34 @@
 #ifndef __MOUSE_H__
 #define __MOUSE_H__
+#include "buf.h"
+struct FIFObuf;
+struct Sheet;
 
-struct Screen;
-struct Mouse;
-struct MouseBuf;
-struct MouseStat;
+typedef struct MouseBuf {
+    struct FIFOBuf buf;
+} MouseBuf;
 
-struct Mouse* getMouse();
+typedef struct MouseStat {
+    char btn;
+    int offsetx, offsety;
+} MouseStat;
 
 // 初始化鼠标
-void initMouse(struct Mouse* mouse, struct Screen* screen);
-
-// 绘制鼠标
-void drawMouse(struct Mouse* mouse);
+struct Sheet* initMouse();
 
 void initMouseDevice();
 
-struct MouseStat* getMouseStat();
+MouseStat* getMouseStat();
 
-struct MouseBuf* getMouseBuf();
-void mouseBufInit(struct MouseBuf* MouseBuf);
-const char isMouseBufEmpty(struct MouseBuf* buf);
-const char isMouseBufMax(struct MouseBuf* buf);
-const char mouseBufPush(struct MouseBuf* buf, const unsigned char key);
-const unsigned char mouseBufPop(struct MouseBuf* buf);
-const int getMouseBufLen(struct MouseBuf* buf);
-void changeMouseStat(struct MouseBuf* buf, struct Screen screen);
-void dealMouseStatChange(struct Screen screen);
+MouseBuf* getMouseBuf();
+void mouseBufInit(MouseBuf* MouseBuf);
+const char isMouseBufEmpty(MouseBuf* buf);
+const char isMouseBufMax(MouseBuf* buf);
+const char mouseBufPush(MouseBuf* buf, const unsigned char key);
+const unsigned char mouseBufPop(MouseBuf* buf);
+const int getMouseBufLen(MouseBuf* buf);
+void changeMouseStat(MouseBuf* buf);
+void dealMouseStatChange(struct Sheet* mouse);
 
 #define KEYCMD_SENDTO_MOUSE 0xd4
 #define MOUSECMD_ENABLE 0xf4

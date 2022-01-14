@@ -1,7 +1,11 @@
 #ifndef __KEYBOARD_H__
 #define __KEYBOARD_H__
 
-struct KeyBoardBuf;
+#include "buf.h"
+typedef struct KeyBoardBuf {
+    struct FIFOBuf buf;
+} KeyBoardBuf;
+
 struct KeyBoardBuf* getKeyBuf();
 void keyBoardInit();
 void keyBufInit(struct KeyBoardBuf* buf);

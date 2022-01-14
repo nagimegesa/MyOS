@@ -12,12 +12,12 @@ typedef struct MemoryManger {
     struct MemoryInfo memInfoArr[MEMORY_MANGER_SIZE];
 } Manger;
 
-struct MemoryManger* getMemoryManger() {
+MemoryManger* getMemoryManger() {
     static struct MemoryManger memMan;
     return &memMan;
 }
 
-void memoryMangerInit(struct MemoryManger* memMan) {
+void memoryMangerInit(MemoryManger* memMan) {
     memMan->freeSize = 0;
     memMan->failedCnt = 0;
     memMan->failedSize = 0;
@@ -47,6 +47,16 @@ void* memoryAlloc(unsigned int size) {
             return addr;
         }
     return 0;
+}
+// 按4K大小分配空间
+void* memoryAlloc4K(unsigned size) {
+    size = (size + 0xfff) & 0xfffff000;
+    return memoryAlloc(size);
+}
+// 按4k大小释放空间
+int memoryFree4K(int addr, unsigned size) {
+    size = (size + 0xfff) & 0xfffff000;
+    return memoryFree(addr, size);
 }
 
 int memoryFree(int addr, unsigned size) {

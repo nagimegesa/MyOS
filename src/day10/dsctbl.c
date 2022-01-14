@@ -3,8 +3,8 @@
 #include "BaseFunction.h"
 
 void initGdtIdt(void) {
-    struct SegmentDescriptor *gdt = (struct SegmentDescriptor *)ADR_GDT;
-    struct GateDescriptor *idt = (struct GateDescriptor *)ADR_IDT;
+    SegmentDescriptor* gdt = (SegmentDescriptor*)ADR_GDT;
+    GateDescriptor* idt = (GateDescriptor*)ADR_IDT;
 
     /* GDT初始化 */
     for (int i = 0; i <= LIMIT_GDT / 8; i++) {
@@ -28,8 +28,7 @@ void initGdtIdt(void) {
     return;
 }
 
-void setSegmdesc(struct SegmentDescriptor *sd, unsigned int limit, int base,
-                 int ar) {
+void setSegmdesc(SegmentDescriptor* sd, unsigned int limit, int base, int ar) {
     if (limit > 0xfffff) {
         ar |= 0x8000; /* GBit = 1 */
         limit /= 0x1000;
@@ -43,7 +42,7 @@ void setSegmdesc(struct SegmentDescriptor *sd, unsigned int limit, int base,
     return;
 }
 
-void setGatedesc(struct GateDescriptor *gd, int offset, int selector, int ar) {
+void setGatedesc(GateDescriptor* gd, int offset, int selector, int ar) {
     gd->offsetLow = offset & 0xffff;
     gd->selector = selector;
     gd->dwCount = (ar >> 8) & 0xff;

@@ -1,17 +1,17 @@
 #ifndef _DSCTBLH__
 #define _DSCTBLH__
 
-struct SegmentDescriptor {
+typedef struct SegmentDescriptor {
     short limitLow, baseLow;
     char baseMid, accessRight;
     char limitHigh, baseHigh;
-};
+} SegmentDescriptor;
 
-struct GateDescriptor {
+typedef struct GateDescriptor {
     short offsetLow, selector;
     char dwCount, accessRight;
     short offsetHigh;
-};
+} GateDescriptor;
 
 // 初始化gdt和idt
 void initGdtIdt(void);
