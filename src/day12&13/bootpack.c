@@ -12,17 +12,18 @@
 void dealKeyBoardInterrupt(int data, Sheet* sheet);
 void func(void);
 void func2(void);
+void func3(void);
 void OSMain(void) {
     initGdtIdt();
     initPic();
     closeLock();
-    initPit();
     unsigned memSize = memtest(0x00400000, 0xbfffffff);
     memoryMangerInit(getMemoryManger());
 
     int tmp = 1;
     tmp = memoryFree(0x00001000, 0x0009e000); /* 0x00001000 - 0x0009efff */
     memoryFree(0x00400000, memSize - 0x00400000);
+    initPit();
     TimerMangerInit(getTimerManger());
     initPalette();
     sheetMangerInit(getSheetManger());
@@ -44,8 +45,9 @@ void OSMain(void) {
     sheetChangeHeight(window, 1);
 
     sheetRefresh(desktop);
-    setTimer(500, func);
-    setTimer(300, func2);
+    setTimer(1000, func);
+    setTimer(100, func2);
+    setTimer(500, func3);
     for (;;) {
         if (!isFIFOEmpty(msgBuf)) {
             int data = FIFOPop(msgBuf);
@@ -55,6 +57,10 @@ void OSMain(void) {
             } else if (isKeyBoardMsg(data)) {
                 dealKeyBoardInterrupt(data, desktop);
             }
+        } else if (!isFIFOEmpty(&(getTimerManger()->timerBuf))) {
+            void (*p)(void) =
+                (void (*)(void))FIFOPop(&getTimerManger()->timerBuf);
+            p();
         }
     }
     return;
@@ -73,6 +79,10 @@ void func(void) {
     sheetRefresh(getSheetManger()->pSheet[0]);
 }
 void func2(void) {
-    putChar('B', getSheetManger()->pSheet[0], 30, 30, COLOR_BLUE);
+    putChar('B', getSheetManger()->pSheet[0], 40, 40, COLOR_BLUE);
+    sheetRefresh(getSheetManger()->pSheet[0]);
+}
+void func3(void) {
+    putChar('C', getSheetManger()->pSheet[0], 10, 10, COLOR_BLUE);
     sheetRefresh(getSheetManger()->pSheet[0]);
 }

@@ -15,6 +15,7 @@ typedef struct TimerManger {
     unsigned timerCnt;
     unsigned nextTime;
     unsigned time;
+    FIFOBuf timerBuf;
     ListPointer(Timer) timerList;
 } TimerManger;
 
@@ -25,4 +26,6 @@ Timer* setTimer(int timerOut, void (*func)());
 
 void timeOut();
 char closeTimer();
+
+#define TIME_BUF_SIZE 20
 #endif

@@ -6,6 +6,8 @@ typedef TimerManger Manger;
 void TimerMangerInit(TimerManger* manger) {
     manger->timerCnt = 0;
     manger->nextTime = TIMER_CNT_MAX;
+     int* buf = memoryAlloc(sizeof(int) * TIME_BUF_SIZE);
+     FIFOInit(&manger->timerBuf, buf, TIME_BUF_SIZE);
     manger->timerList = GetEmptyList(Timer)(cmp);
 }
 
@@ -32,9 +34,10 @@ void timeOut() {
     ListPointer(Timer) list = manger->timerList;
     if (!ListEmpty(Timer)(list)) {
         ListNodePointer(Timer) pNode = ListGetFirst(Timer)(list);
-        pNode->data.func();
+        FIFOPush(&manger->timerBuf, (int)pNode->data.func);
+        //pNode->data.func();
         ListErase(Timer)(list, pNode->data);
-        manger->timerCnt = ListEmpty(Timer)(list)
+        manger->nextTime = (ListEmpty(Timer)(list))
                                ? TIMER_CNT_MAX
                                : ListGetFirst(Timer)(list)->data.timeOut;
     }
