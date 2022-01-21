@@ -20,7 +20,7 @@ Timer* setTimer(int timerOut, void (*func)()) {
     Manger* manger = getTimerManger();
     Timer timer;
     timer.func = func;
-    timer.timeOut = manger->timerCnt + timerOut;
+    timer.timeOut = manger->time + timerOut;
     Timer* tm = ListInsert(Timer)(manger->timerList, timer);
     if (tm == NULL) return;
     manger->nextTime =
