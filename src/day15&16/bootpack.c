@@ -10,10 +10,10 @@
 #include "window.h"
 
 void taskMain(void);
-void dealKeyBoardInterrupt(int data, Sheet* sheet);
-void func(void);
-void func2(void);
-void func3(void);
+void funcA(void);
+void funcB(void);
+void funcC(void);
+void funcNum(int num);
 void OSMain(void) {
     initGdtIdt();
     initPic();
@@ -29,21 +29,25 @@ void OSMain(void) {
     timerMangerInit(getTimerManger());
     FIFOBuf* timeBuf = getATimerBuf();
     Task* A = taskMangerInit();
-    Task* B = getTask();
-    B->stat.eip = (int)&taskMain;
-    B->stat.esp = (int)memoryAlloc4K(64 * 1024) + 64 * 1024 - 8;
-    B->stat.es = 1 * 8;
-    B->stat.cs = 2 * 8;
-    B->stat.ss = 1 * 8;
-    B->stat.ds = 1 * 8;
-    B->stat.fs = 1 * 8;
-    B->stat.gs = 1 * 8;
-    taskRuning(B);
-
+    taskRuning(A, 0, 2);
+    Task* B[4];
+    for (int i = 0; i < 2; ++i) {
+        B[i] = getTask();
+        B[i]->stat.eip = (int)&taskMain;
+        B[i]->stat.esp = (int)memoryAlloc4K(64 * 1024) + 64 * 1024 - 8;
+        B[i]->stat.es = 1 * 8;
+        B[i]->stat.cs = 2 * 8;
+        B[i]->stat.ss = 1 * 8;
+        B[i]->stat.ds = 1 * 8;
+        B[i]->stat.fs = 1 * 8;
+        B[i]->stat.gs = 1 * 8;
+        taskRuning(B[i], 2, i + 1);
+    }
     initPalette();
     sheetMangerInit(getSheetManger());
     Sheet* desktop = initDesktop();
     FIFOBuf* msgBuf = getMsgBuf();
+    msgBuf->task = A;
     MsgBufInit(NULL);
     Sheet* mouse = initMouse();
     writePort8(PIC0_IMR, 0xf8); /* 开放PIC1和键盘中断(11111001) 以及定时器中断*/
@@ -56,12 +60,7 @@ void OSMain(void) {
             getFreeMemorySize() / 1024, tmp);
     putString(buf, desktop, 20, 20, COLOR_WHITE);
 
-    BaseWindow* window = makeBaseWindow("2", 50, 50, 100, 100);
-    sheetChangeHeight(window->sheet, 1);
-    BaseWindow* window2 = makeBaseWindow("3", 60, 60, 100, 100);
-    sheetChangeHeight(window2->sheet, 2);
     sheetRefresh(desktop);
-    msgBuf->task = A;
     for (;;) {
         setLock();
         if (!isFIFOEmpty(msgBuf)) {
@@ -73,14 +72,10 @@ void OSMain(void) {
                 dealKeyBoardInterrupt(data, desktop);
             }
         } else if (!isFIFOEmpty(timeBuf)) {
-            // int time = FIFOPop(timeBuf);
-            // if (time == 2) {
-            //   farJmp(0, 4 * 8);
-            //    setTimer(2, timeBuf);
-            // }
+            unsigned time = FIFOPop(timeBuf);
         } else {
+            closeLock();
             taskSleep(A);
-            //closeLock();
         }
         closeLock();
     }
@@ -88,32 +83,50 @@ void OSMain(void) {
 }
 
 void taskMain(void) {
+    static int x = 0;
+    x += 200;
     TimerManger* timeManger = getTimerManger();
     FIFOBuf* timeBuf = getATimerBuf();
+    BaseWindow* window = makeBaseWindow("func2", x, 100, 100, 100);
+    sheetChangeHeight(window->sheet, SHEET_TOP);
+    sheetRefresh(window->sheet);
+    int i = 0;
+    char buf[10];
     for (;;) {
-        // if (!isFIFOEmpty(timeBuf)) {
-        //    unsigned time = FIFOPop(timeBuf);
-        //   if (time == 2) {
-        //       farJmp(0, 3 * 8);
-        // setTimer(2, timeBuf);
-        ///   }
-        //} else
-        //     pause();
+        setLock();
+        ++i;
+        sprintf(buf, "%d", i);
+        drawRect(window->sheet, 0, WINDOW_TITLE_HIGH, FONT_WIDE * 10, FONT_HIGH,
+                 COLOR_GRAY);
+        putString(buf, window->sheet, 0, WINDOW_TITLE_HIGH, COLOR_BLUE);
+        sheetRefresh(window->sheet);
+        closeLock();
     }
 }
-void func(void) {
+
+void funcA(void) {
     static int x = 30;
     putChar('A', getSheetManger()->pSheet[0], x, 30, COLOR_BLUE);
     sheetRefresh(getSheetManger()->pSheet[0]);
     x += 10;
 }
-void func2(void) {
+void funcB(void) {
     static int x = 40;
     putChar('B', getSheetManger()->pSheet[0], x, 40, COLOR_BLUE);
     sheetRefresh(getSheetManger()->pSheet[0]);
     x += 10;
 }
-void func3(void) {
-    putChar('C', getSheetManger()->pSheet[0], 10, 10, COLOR_BLUE);
+void funcC(void) {
+    static int x = 10;
+    putChar('C', getSheetManger()->pSheet[0], x, 50, COLOR_BLUE);
     sheetRefresh(getSheetManger()->pSheet[0]);
+    x += 10;
+}
+void funcNum(int num) {
+    static int x = 10;
+    char buf[10];
+    sprintf(buf, "%d", num);
+    putString(buf, getSheetManger()->pSheet[0], x, 60, COLOR_BLUE);
+    sheetRefresh(getSheetManger()->pSheet[0]);
+    x += 10;
 }

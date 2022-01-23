@@ -42,7 +42,7 @@ void* memoryAlloc(unsigned int size) {
             if (manger->memInfoArr[index].size == 0) {
                 unsigned limit = --manger->freeSize;
                 for (; index < limit; ++index)
-                    manger[index] = manger[index + 1];
+                    manger->memInfoArr[index] = manger->memInfoArr[index + 1];
             }
             return addr;
         }

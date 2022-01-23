@@ -78,16 +78,46 @@ Task* taskMangerInit() {
         setSegmdesc(gdt + TASK_START_GDT + i, 103, &(*manger)->task[i].stat,
                     AR_TSS32);
     }
+    for (int i = 0; i < TASK_LEVEL_CNT; ++i) {
+        (*manger)->level[i].runingCnt = 0;
+        (*manger)->level[i].runNow = 0;
+    }
     Task* task = getTask();
     if (task != NULL) {
         task->tag = TASK_RUNING;
-        (*manger)->runNow = 0;
-        (*manger)->runingCnt = 1;
-        (*manger)->pTask[0] = task;
+        task->priority = 2;
+        task->level = 0;
+        taskAdd(task);
+        changeTaskSub();
         setTR(task->GDTNum);
-        setTaskTimer(2);
+        setTaskTimer(task->priority);
     }
     return task;
+}
+void taskRemove(Task* task) {
+    TaskManger** manger = getTaskManger();
+    TaskLevel* lev = &(*manger)->level[(*manger)->levelNow];
+    int index = 0;
+    for (; index < lev->runingCnt; ++index)
+        if (lev->pTask[index] == task) break;
+    --lev->runingCnt;
+    if (index < lev->runNow) --lev->runNow;
+    if (lev->runNow >= lev->runingCnt) lev->runNow = 0;
+    task->tag = TASK_SLEEP;
+    for (; index < lev->runingCnt; ++index)
+        lev->pTask[index] = lev->pTask[index + 1];
+}
+void taskAdd(Task* task) {
+    TaskManger** manger = getTaskManger();
+    TaskLevel* lev = &(*manger)->level[(*manger)->levelNow];
+    lev->pTask[lev->runingCnt++] = task;
+    task->tag = taskRuning;
+}
+
+Task* getTaskNow() {
+    TaskManger** manger = getTaskManger();
+    TaskLevel* lev = &(*manger)->level[(*manger)->levelNow];
+    return lev->pTask[lev->runNow];
 }
 
 Task* getTask() {
@@ -116,40 +146,48 @@ Task* getTask() {
     return NULL;
 }
 
-void taskRuning(Task* task) {
-    TaskManger** manger = getTaskManger();
-    (*manger)->pTask[(*manger)->runingCnt++] = task;
-    task->tag = TASK_RUNING;
+void taskRuning(Task* task, int level, int priority) {
+    if (level < 0) level = task->level;
+    if (priority > 0) task->priority = priority;
+    if (task->tag == TASK_RUNING && task->level != level) taskRemove(task);
+    if (task->tag != TASK_RUNING) {
+        task->level = level;
+        taskAdd(task);
+    }
+    (*getTaskManger())->isNeedChange = 1;
 }
 
+void changeTaskSub() {
+    TaskManger** manger = getTaskManger();
+    int index = 0;
+    for (; index < TASK_LEVEL_CNT; ++index)
+        if ((*manger)->level[index].runingCnt > 0) break;
+    (*manger)->levelNow = index;
+    (*manger)->isNeedChange = 0;
+}
 void changeTask() {
     TaskManger** manger = getTaskManger();
-    setTaskTimer(2);
-    if ((*manger)->runingCnt >= 2) {
-        (*manger)->runNow = (*manger)->runNow + 1 == (*manger)->runingCnt
-                                ? 0
-                                : (*manger)->runNow + 1;
-        farJmp(0, (*manger)->pTask[(*manger)->runNow]->GDTNum);
+    TaskLevel* lev = &(*manger)->level[(*manger)->levelNow];
+    Task* taskNow = lev->pTask[lev->runNow];
+    lev->runNow = lev->runNow + 1 == lev->runingCnt ? 0 : lev->runNow + 1;
+    if ((*manger)->isNeedChange) {
+        changeTaskSub();
+        lev = &(*manger)->level[(*manger)->levelNow];
     }
+    Task* task = lev->pTask[lev->runNow];
+    setTaskTimer(task->priority);
+    if (taskNow != task) farJmp(0, task->GDTNum);
 }
 
 void taskSleep(Task* task) {
     TaskManger** manger = getTaskManger();
     if (task->tag == TASK_RUNING) {
-        task->tag = TASK_SLEEP;
-        char isNeedChange = 0;
-        if ((*manger)->pTask[((*manger)->runNow)] == task) isNeedChange = 1;
-        int index = 0;
-        for (; index < (*manger)->runingCnt; ++index)
-            if ((*manger)->pTask[index] == task) break;
-        --((*manger)->runingCnt);
-        if (index < (*manger)->runNow) --((*manger)->runNow);
-        for (; index < (*manger)->runingCnt; ++index)
-            (*manger)->pTask[index] = (*manger)->pTask[index + 1];
-        if (isNeedChange) {
-            if ((*manger)->runNow >= (*manger)->runingCnt)
-                (*manger)->runNow = 0;
-            farJmp(0, (*manger)->pTask[(*manger)->runNow]->GDTNum);
+        Task* taskNow = getTaskNow();
+        taskRemove(task);
+        if (task == taskNow) {
+            changeTaskSub();
+            taskNow = getTaskNow();
+            farJmp(0, taskNow->GDTNum);
         }
     }
 }

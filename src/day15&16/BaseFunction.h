@@ -64,4 +64,9 @@ void asm_inthandler27(void);
 void setTR(int tr);
 void farJmp(int eip, int cs);
 
+#define DEBUG         \
+    void funcA(void); \
+    void funcB(void); \
+    void funcC(void); \
+    void funcNum(int num);
 #endif

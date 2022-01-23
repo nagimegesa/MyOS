@@ -6,6 +6,8 @@
 #define TIMER_CNT_MAX 0xffffffff
 #define TASK_MAX_CNT 1000
 #define TASK_START_GDT 3
+#define TASK_ONE_LEVEL_CNT 100
+#define TASK_LEVEL_CNT 10
 
 #define TASK_UNUSE 0
 #define TASK_USING 1
@@ -39,12 +41,18 @@ typedef struct TaskStat {
 
 typedef struct Task {
     int GDTNum, tag;
+    int level, priority;
     TaskStat stat;
 } Task;
+typedef struct TaskLevel {
+    int runingCnt, runNow;
+    Task* pTask[TASK_ONE_LEVEL_CNT];
+} TaskLevel;
 
 typedef struct TaskManger {
-    int runingCnt, runNow;
-    Task* pTask[TASK_MAX_CNT];
+    int levelNow;
+    char isNeedChange;
+    TaskLevel level[TASK_LEVEL_CNT];
     Task task[TASK_MAX_CNT];
 } TaskManger;
 
@@ -52,7 +60,11 @@ void timerMangerInit(TimerManger* manger);
 TaskManger** getTaskManger();
 Task* taskMangerInit();
 Task* getTask();
-void taskRuning(Task* task);
+Task* getTaskNow();
+void taskAdd(Task* task);
+void taskRemove(Task* task);
+void changeTaskSub();
+void taskRuning(Task* task, int level, int priority);
 void taskSleep(Task* task);
 
 TimerManger* getTimerManger();

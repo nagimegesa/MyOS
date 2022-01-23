@@ -17,7 +17,7 @@ char FIFOPush(FIFOBuf* buf, int key) {
         buf->head %= (buf->maxLen);
         ++buf->len;
         if (buf->task != NULL && buf->task->tag != TASK_RUNING)
-            taskRuning(buf->task);
+            taskRuning(buf->task, -1, 2);
         return 1;
     }
     return 0;
