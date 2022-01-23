@@ -64,7 +64,6 @@ int memoryFree(int addr, unsigned size) {
     int index = 0;
     for (; index < manger->freeSize; ++index)
         if (manger->memInfoArr[index].addr > addr) break;
-
     if (index > 0 && manger->memInfoArr[index - 1].addr +
                              manger->memInfoArr[index - 1].size ==
                          addr) {
