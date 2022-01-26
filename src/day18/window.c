@@ -14,6 +14,9 @@ static void makeBaseWindowImpl(BaseWindow* window, const char* title, int x,
                                int y, unsigned wide, unsigned high, int tag);
 static void scrollWindow(ConsleWindow* window);
 static void dispatchCmd(ConsleWindow* window, const char* cmd);
+static void windowPutChar(ConsleWindow* window, char ch);
+static void windowPutString(ConsleWindow* window, const char* str);
+static void showFile(ConsleWindow* window);
 
 Manger* getWindowManger() {
     static Manger manger;
@@ -39,6 +42,7 @@ void makeConsleWindow(ConsleWindow* window, const char* title, int x, int y,
     window->cury = WINDOW_TITLE_HIGH;
     window->BaseWindow.windowType = WINDOW_TYPE_CMD;
     addWindow(window, WINDOW_TYPE_CMD, window->BaseWindow.sheet->info.height);
+    windowPutChar(window, '>');
 }
 
 void drawCursor(ConsleWindow* window) {
@@ -91,57 +95,31 @@ Sheet* getWindowSheet(void* window) { return ((BaseWindow*)window)->sheet; }
 int getWindowType(void* window) { return ((BaseWindow*)window)->windowType; }
 
 void windowInput(ConsleWindow* window, char ch) {
-    static int isEnter = 0, lastx = 0, lasty = WINDOW_TITLE_HIGH;
-    static char buf[30], top = 0;
-    int chx = window->curx, chy = window->cury;
-    int x = chx, y = chy;
-    Sheet* sheet = getWindowSheet(window);
-    int wide = sheet->info.wide;
-    if (ch == KEY_TAB) {
-        return;
-    } else if (ch == KEY_BACKSPACE) {
-        top = top == 0 ? 0 : top - 1;
-        x = x - FONT_WIDE;
-        if (x < WINDOW_FONT_SIDE) {
-            x = y == WINDOW_TITLE_HIGH
-                    ? WINDOW_FONT_SIDE
-                    : wide - (wide - WINDOW_FONT_SIDE * 2) % FONT_WIDE -
-                          FONT_WIDE;
-            y = y == WINDOW_TITLE_HIGH ? y : y - FONT_HIGH;
-        }
-    } else if (ch == KEY_ENTER) {
-        x = WINDOW_FONT_SIDE;
-        if (y + FONT_HIGH >= sheet->info.high - FONT_HIGH) {
-            scrollWindow(window);
-            drawRect(sheet, chx, chy - FONT_HIGH, FONT_WIDE, FONT_HIGH,
-                     COLOR_GRAY);
-        } else
-            y += FONT_HIGH;
-        buf[top] = '\0';
-        top = 0;
+    static char buf[50], top = 0;
+    if (ch == KEY_ENTER) {
         dispatchCmd(window, buf);
-    } else {
-        x += FONT_WIDE;
-        if (x >= wide - 2 * WINDOW_FONT_SIDE - FONT_WIDE) {
-            x = WINDOW_FONT_SIDE;
-            if (y + FONT_HIGH >= sheet->info.high - FONT_HIGH) {
-                scrollWindow(window);
-                drawRect(sheet, chx, chy - FONT_HIGH, FONT_WIDE, FONT_HIGH,
-                         COLOR_GRAY);
-            } else
-                y += FONT_HIGH;
-        };
-    }
-    window->curx = x;
-    window->cury = y;
-    drawRect(sheet, chx, chy, FONT_WIDE, FONT_HIGH, COLOR_GRAY);
-    if (ch != KEY_BACKSPACE && ch != KEY_ENTER) {
+        top = 0;
+        memset(buf, 0, sizeof(buf));
+    } else if (ch != KEY_BACKSPACE)
         buf[top++] = ch;
-        putChar(ch, sheet, chx, chy, COLOR_BLACK);
+    else if (ch == KEY_BACKSPACE) {
+        buf[top] = '\0';
+        top = top == 0 ? 0 : top - 1;
     }
-    windowRefresh(window, chx, chy, FONT_WIDE, FONT_HIGH);
+    windowPutChar(window, ch);
+    if (ch == KEY_ENTER) windowPutChar(window, '>');
 }
-
+void windowClean(void* window) {
+    Sheet* sheet = getWindowSheet(window);
+    drawRect(sheet, 0, WINDOW_TITLE_HIGH, sheet->info.wide,
+             sheet->info.high - WINDOW_TITLE_HIGH - 1, COLOR_GRAY);
+    if (getWindowType(window) == WINDOW_TYPE_CMD) {
+        ConsleWindow* w = (ConsleWindow*)window;
+        w->curx = 0;
+        w->cury = WINDOW_TITLE_HIGH;
+    }
+    windowRefresh(window, 0, 0, sheet->info.wide, sheet->info.high);
+}
 Define_List(WindowInfo);
 
 static int cmp(WindowInfo info, WindowInfo data) {
@@ -185,22 +163,99 @@ static void makeBaseWindowImpl(BaseWindow* window, const char* title, int x,
         addWindow(window, WINDOW_TYPE_BASE, window->sheet->info.height);
     }
 }
-
+DEBUG
 static void dispatchCmd(ConsleWindow* window, const char* cmd) {
     if (strlen(cmd) == 0) return;
+    char buf[40];
     if (strcmp(cmd, "mem") == 0) {
+        unsigned size = getFreeMemorySize();
+        sprintf(buf, "\nmemory size %d\n", size);
     } else if (strcmp(cmd, "ll") == 0) {
+        showFile(window);
     } else if (strcmp(cmd, "cls") == 0) {
-    } else if (strcmp(cmd, "dir") == 0) {
+        windowClean(window);
     } else
+        sprintf(buf, "\ncmd error\n");
+    windowPutString(window, buf);
+}
+
+static void showFile(ConsleWindow* window) {
+    static FileInfo* info = (FileInfo*)(0x00100000 + 0x002600);
+    char buf[50];
+    windowPutChar(window, '\n');
+    for (int i = 0; i < 224; ++i) {
+        memset(buf, 0, sizeof(buf));
+        if (info[i].name[0] == '\0') break;
+        if (info[i].name[0] != 0xe5) {
+            if ((info[i].type & 0x18) == 0) {
+                sprintf(buf, "filename.ext   %7d\n", info[i].size);
+                for (int j = 0; j < 8; ++j) buf[j] = info[i].name[j];
+                buf[9] = info[i].ext[0];
+                buf[10] = info[i].ext[1];
+                buf[11] = info[i].ext[2];
+                windowPutString(window, buf);
+            }
+        }
+    }
+}
+
+static void windowPutChar(ConsleWindow* window, char ch) {
+    int chx = window->curx, chy = window->cury;
+    int x = chx, y = chy;
+    Sheet* sheet = getWindowSheet(window);
+    int wide = sheet->info.wide;
+    if (ch == KEY_TAB) {
         return;
+    } else if (ch == KEY_BACKSPACE) {
+        x = x - FONT_WIDE;
+        if (x <= WINDOW_FONT_SIDE + FONT_WIDE) {
+            x = y == WINDOW_TITLE_HIGH
+                    ? WINDOW_FONT_SIDE + FONT_WIDE
+                    : wide - (wide - WINDOW_FONT_SIDE * 2) % FONT_WIDE -
+                          FONT_WIDE;
+            y = y == WINDOW_TITLE_HIGH ? y : y - FONT_HIGH;
+        }
+    } else if (ch == KEY_ENTER) {
+        x = WINDOW_FONT_SIDE;
+        if (y + FONT_HIGH >= sheet->info.high - FONT_HIGH) {
+            scrollWindow(window);
+            drawRect(sheet, chx, chy - FONT_HIGH, FONT_WIDE, FONT_HIGH,
+                     COLOR_GRAY);
+        } else
+            y += FONT_HIGH;
+    } else {
+        x += FONT_WIDE;
+        if (x >= wide - 2 * WINDOW_FONT_SIDE - FONT_WIDE) {
+            x = WINDOW_FONT_SIDE;
+            if (y + FONT_HIGH >= sheet->info.high - FONT_HIGH) {
+                scrollWindow(window);
+                drawRect(sheet, chx, chy - FONT_HIGH, FONT_WIDE, FONT_HIGH,
+                         COLOR_GRAY);
+            } else
+                y += FONT_HIGH;
+        };
+    }
+    window->curx = x;
+    window->cury = y;
+    drawRect(sheet, chx, chy, FONT_WIDE, FONT_HIGH, COLOR_GRAY);
+    if (ch != KEY_BACKSPACE && ch != KEY_ENTER)
+        putChar(ch, sheet, chx, chy, COLOR_BLACK);
+    windowRefresh(window, chx, chy, FONT_WIDE, FONT_HIGH);
+}
+
+static void windowPutString(ConsleWindow* window, const char* str) {
+    char* pStr = str;
+    int limit = strlen(str);
+    for (int i = 0; i < limit; ++i) { 
+        windowPutChar(window, str[i]);
+    }
 }
 
 static void scrollWindow(ConsleWindow* window) {
     Sheet* sheet = getWindowSheet(window);
     const unsigned wide = sheet->info.wide;
     const unsigned high = sheet->info.high - FONT_HIGH - 1;
-    const unsigned tmpp = (FONT_HIGH) * wide;
+    const unsigned tmpp = (FONT_HIGH)*wide;
     for (int i = WINDOW_TITLE_HIGH; i < high; ++i) {
         const unsigned tmp = i * wide;
         for (int j = 0; j < wide; ++j)

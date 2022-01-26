@@ -51,6 +51,7 @@ MyOS.img: MyOS.sys IPL.sys
 	$(EDIMG)   imgin:$(TOOLPATH)fdimg0at.tek \
 		wbinimg src:IPL.sys len:512 from:0 to:0 \
 		copy from:MyOS.sys to:@: \
+		copy from:buf.h to:@: \
 		imgout:MyOS.img
 
 clean:

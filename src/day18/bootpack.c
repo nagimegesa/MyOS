@@ -85,7 +85,7 @@ void cmdMain(void) {
     FIFOBuf* timeBuf = getATimerBuf();
     setTimer(50, timeBuf);
     ConsleWindow window;
-    makeConsleWindow(&window, "cmd", 100, 100, 500, 100);
+    makeConsleWindow(&window, "cmd", 100, 100, 500, 400);
     Sheet* sheet = getWindowSheet(&window);
     windowChangeHeight(&window, WINDOW_TOP, WINDOW_TYPE_CMD);
     windowRefresh(&window, 0, 0, sheet->info.wide, sheet->info.high);

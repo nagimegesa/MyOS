@@ -67,7 +67,7 @@ void dealKeyBoardInterrupt(int data, Sheet* sheet) {
                 ch = 9;
                 break;
             case __KEY_ENTER:
-                ch = 13;
+                ch = 10;
                 break;
             case __KEY_BACKSPACE:
                 ch = 8;

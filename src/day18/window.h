@@ -18,7 +18,7 @@
 #define WINDOW_FONT_SIDE 1
 
 #define KEY_BACKSPACE 8
-#define KEY_ENTER 13
+#define KEY_ENTER 10
 #define KEY_TAB 9
 #define KEY_ESC 27
 
@@ -49,6 +49,13 @@ typedef struct ConsleWindow {
     unsigned curx, cury;
 } ConsleWindow;
 
+typedef struct FileInfo {
+    unsigned char name[8], ext[3], type;
+    char reserve[10];
+    unsigned short time, date, clustno;
+    unsigned int size;
+} FileInfo;
+
 void makeBaseWindow(BaseWindow* window, const char* title, int x, int y,
                     unsigned wide, unsigned high);
 
@@ -58,11 +65,11 @@ void makeConsleWindow(ConsleWindow* window, const char* title, int x, int y,
 WindowManger* getWindowManger();
 void WindowMangerInit();
 void drawCursor(ConsleWindow* window);
-void WindowSheetChangeHeight(struct Sheet* sheet, int height);
 void windowChangeHeight(void* window, int height, int windowType);
 void windowRefresh(void* window, int x, int y, int wide, int high);
 struct Sheet* getWindowSheet(void* window);
 int getWindowType(void* window);
 void* getTopWindow();
 void windowInput(ConsleWindow* window, char ch);
+void windowClean(void* window);
 #endif
